@@ -1,0 +1,12 @@
+.DS_Store
+.RData
+.Rhistory
+.Rproj.user/
+.github/
+test_applications/
+curve_to_click/
+app_enhanced.R
+app2.R
+rsconnect/
+5_cache_and_memoisation.R
+

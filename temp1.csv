@@ -1,0 +1,10 @@
+"","tech","broad_status","n","MW","missing_MW","Avg_MW","capacity_w_missing_est"
+"1","Solar Photovoltaics","Planning",14,68.09,4,6.809,95.326
+"2","Solar Photovoltaics","Connection",10,29.95,5,5.99,59.9
+"3","Solar Photovoltaics","Failed",18,198.4,0,11.0222222222222,198.4
+"4","Solar Photovoltaics","Completed",21,209.3,0,9.96666666666667,209.3
+"5","Wind Onshore","Planning",55,162.5,30,6.5,357.5
+"6","Wind Onshore","Connection",102,323.17,9,3.47494623655914,354.444516129033
+"7","Wind Onshore","Construction",1,27,0,27,27
+"8","Wind Onshore","Failed",118,1395.275,0,11.8243644067797,1395.275
+"9","Wind Onshore","Completed",82,1195,0,14.5731707317073,1195
