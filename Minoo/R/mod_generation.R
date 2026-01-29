@@ -43,8 +43,9 @@ generation_ui <- function(id) {
            the RES curtailed, and the gap between the achieved and the potential target."),
 
         
-        h4(HTML("$$\\text{SNSP} = \\frac{\\text{Curtailed RES} + \\text{Import}} {\\text{Demand} + \\text{Export}}$$")),
-        h4(HTML("$$\\text{Curtailed RES} = \\text{SNSP} * (\\text{Demand} + \\text{Export}) - \\text{Import}$$")),
+        h4(HTML("$$\\text{SNSP} = \\frac{\\text{Actual RES} + \\text{Import}} {\\text{Demand} + \\text{Export}}$$")),
+        h4(HTML("$$\\text{Actual RES} = \\text{SNSP} * (\\text{Demand} + \\text{Export}) - \\text{Import}$$")),
+        h4(HTML("$$\\text{Curtailed RES} = \\text{Available RES} - \\text{Actual RES}$$")),
         
         
         dateInput(
@@ -125,7 +126,7 @@ generation_ui <- function(id) {
 #-------sliders for individual measurements
         h2("Curtailed RES Calculator",
            style = "color:#355070; margin-top:40px; margin-bottom:20px;"),
-        p("Adjust parameters below to calculate Curtailed RES, Curtailed Target, and Potential Target."),
+        p("Adjust parameters below to calculate Actual RES, Curtailed RES, Actual Target, and Potential Target."),
         
         fluidRow(
           column(
@@ -241,12 +242,13 @@ generation_server <- function(id, state) {
         Import = numeric(),
         Export = numeric(),
         `System Generation` = numeric(),
-        `Renewable (RES)` = numeric(),
+        `Available RES` = numeric(),
         Wind = numeric(),
         Solar = numeric(),
         `Fossil Fuel` = numeric(),
         Demand = numeric(),
         SNSP = numeric(),
+        `Actual RES` = numeric(),
         `Curtailed RES` = numeric(),
         `Target` = numeric(),
         `Potential Target` = numeric()
@@ -262,14 +264,15 @@ generation_server <- function(id, state) {
           Import = .data$sum_import,
           Export = .data$sum_export,
           `System Generation` = .data$sum_system_gen.x,
-          `Renewable (RES)` = .data$sum_res, 
+          `Available RES` = .data$sum_res, 
           Wind = .data$sum_wind, 
           Solar = .data$sum_solar, 
           `Fossil Fuel` = .data$sum_system_gen.y,
           Demand = .data$sum_demand, 
           SNSP = .data$median_SNSP.x, 
-          `Curtailed RES` = (.data$median_SNSP.x * (.data$sum_demand + .data$sum_export))-.data$sum_import,
-          `Target` = (((.data$median_SNSP.x * (.data$sum_demand + .data$sum_export))-.data$sum_import)/.data$sum_demand),
+          `Actual RES` = pmax(0, (.data$median_SNSP.x * (.data$sum_demand + .data$sum_export)) - .data$sum_import),
+          `Curtailed RES` = `Available RES` - `Actual RES`,
+          `Target` = `Actual RES`/Demand, 
           `Potential Target` = (.data$sum_res/.data$sum_demand)
         ) %>%
         dplyr::slice_head(n = 1)   
@@ -295,12 +298,13 @@ generation_server <- function(id, state) {
         Import = numeric(),
         Export = numeric(),
         `System Generation` = numeric(),
-        `Renewable (RES)` = numeric(),
+        `Available RES` = numeric(),
         Wind = numeric(),
         Solar = numeric(),
         `Fossil Fuel` = numeric(),
         Demand = numeric(),
         SNSP = numeric(),
+        `Actual RES` = numeric(),
         `Curtailed RES` = numeric(),
         `Target` = numeric(),
         `Potential Target` = numeric()
@@ -317,56 +321,115 @@ generation_server <- function(id, state) {
     )
 
 #---curtailed vs potential RES
+    actual_res_from_rv <- reactive({
+      req(nrow(rv$table) > 0)
+      rv$table %>%
+        dplyr::transmute(
+          date = as.Date(.data$Date),
+          actual_res = .data$`Actual RES`
+        ) %>%
+        dplyr::arrange(.data$date)
+    })
+    
+    available_res_from_rv <- reactive({
+      req(nrow(rv$table) > 0)
+      rv$table %>%
+        dplyr::transmute(
+          date = as.Date(.data$Date),
+          available_res = .data$`Available RES`  
+        ) %>%
+        dplyr::arrange(.data$date)
+    })
+    
+    monthly_from_rv <- reactive({
+      req(nrow(rv$table) > 0)
+      rv$table %>%
+        dplyr::transmute(
+          date = as.Date(.data$Date),
+          Actual = .data$`Actual RES`,
+          Available = .data$`Available RES`
+        ) %>%
+        dplyr::mutate(
+          month_start = as.Date(format(.data$date, "%Y-%m-01"))
+        ) %>%
+        dplyr::group_by(.data$month_start) %>%
+        dplyr::summarise(
+          sum_act_res = sum(.data$Actual, na.rm = TRUE),
+          sum_ava_res = sum(.data$Available, na.rm = TRUE),
+          .groups = "drop"
+        )
+    })
+    
     output$res_ts <- renderPlot({
+      act_df <- actual_res_from_rv()
+      ava_df <- available_res_from_rv()
+      
+      req(nrow(act_df) > 0, nrow(ava_df) > 0)
+      
       ggplot() +
-        geom_line(data = curtailment_res,
-                  aes(x = date, y = median_SNSP, colour = "Curtailed RES"),
-                  linewidth = 0.6, alpha = 0.3) +
-        geom_smooth(data = curtailment_res,
-                    aes(x = date, y = median_SNSP, colour = "Curtailed RES"),
-                    method = "loess", span = 0.2, se = FALSE, linewidth = 1.1) +
+        geom_line(
+          data = act_df,
+          aes(x = date, y = actual_res, colour = "Actual RES"),
+          linewidth = 0.6, alpha = 0.3
+        ) +
+        geom_smooth(
+          data = act_df,
+          aes(x = date, y = actual_res, colour = "Actual RES"),
+          method = "loess", span = 0.2, se = FALSE, linewidth = 1.1
+        ) +
         
-        geom_line(data = daily_sum_res,
-                  aes(x = date, y = sum_res, colour = "Potential RES"),
-                  linewidth = 0.6, alpha = 0.3) +
-        geom_smooth(data = daily_sum_res,
-                    aes(x = date, y = sum_res, colour = "Potential RES"),
-                    method = "loess", span = 0.2, se = FALSE, linewidth = 1.1) +
+        geom_line(
+          data = ava_df,
+          aes(x = date, y = available_res, colour = "Available RES"),
+          linewidth = 0.6, alpha = 0.3
+        ) +
+        geom_smooth(
+          data = ava_df,
+          aes(x = date, y = available_res, colour = "Available RES"),
+          method = "loess", span = 0.2, se = FALSE, linewidth = 1.1
+        ) +
         
-        scale_colour_manual(values = c("Curtailed RES" = "#eaac8b",
-                                       "Potential RES" = "#6d597a")) +
-        labs(title = "RES: Curtailed vs Potential (daily median + smooth)",
-             x = NULL, y = "Ratio / Units",         x = NULL, y = "Ratio / Units", colour = NULL) +
+        scale_colour_manual(values = c(
+          "Actual RES" = "#eaac8b",
+          "Available RES" = "#6d597a"
+        )) +
+        labs(
+          title = "RES: Actual vs Available (daily + smooth)",
+          x = NULL, y = "Units / Ratio", colour = NULL
+        ) +
         theme_minimal()
     })
     
     output$res_monthly_stack <- renderPlot({
-      res_yearly_long <- monthly_sum_cur_res %>%
-        dplyr::select(month_start, Curtailed = sum_cur_res) %>%
+      m_df <- monthly_from_rv()
+      req(nrow(m_df) > 0)
+      
+      res_yearly_long <- m_df %>%
+        dplyr::select(month_start, Actual = .data$sum_act_res) %>%
         dplyr::full_join(
-          monthly_sum_pot_res %>% dplyr::select(month_start, Potential = sum_pot_res),
+          m_df %>% dplyr::select(month_start, Available = .data$sum_ava_res),
           by = "month_start"
         ) %>%
         tidyr::pivot_longer(
-          cols = c(Curtailed, Potential),
+          cols = c(.data$Actual, .data$Available),
           names_to = "Type",
           values_to = "Value"
         ) %>%
         dplyr::mutate(
-          Type = factor(Type, levels = c("Curtailed", "Potential")),
-          Year = format(as.Date(month_start), "%Y")   
+          Type = factor(.data$Type, levels = c("Actual", "Available")),
+          Year = format(as.Date(.data$month_start), "%Y")
         ) %>%
-        dplyr::group_by(Year, Type) %>%
-        dplyr::summarise(Value = sum(Value, na.rm = TRUE), .groups = "drop")
+        dplyr::group_by(.data$Year, .data$Type) %>%
+        dplyr::summarise(Value = sum(.data$Value, na.rm = TRUE), .groups = "drop")
       
       ggplot(res_yearly_long, aes(x = Year, y = Value, fill = Type, group = Type)) +
-        geom_col(position = position_dodge(width = 0.7), width = 0.7) +  
-        scale_fill_manual(
-          values = c("Curtailed" = "#eaac8b",
-                     "Potential" = "#6d597a")
-        ) +
+        geom_col(position = position_dodge(width = 0.7), width = 0.7) +
+        scale_fill_manual(values = c(
+          "Actual" = "#eaac8b",
+          "Available" = "#6d597a"
+        )) +
         labs(
-          title = "RES: Curtailed vs Potential (Yearly sums, side-by-side)",
+          title = "RES: Actual vs Available (Yearly sums, side-by-side)",
           x = NULL,
           y = "Units",
           fill = NULL
@@ -555,9 +618,10 @@ generation_server <- function(id, state) {
 
       df_all <- df_all %>%
         mutate(
-          curtailed_res    = median_SNSP.x * (sum_demand + sum_export) - sum_import,
-          curtailed_target = curtailed_res / sum_demand,
-          potential_target = sum_res / sum_demand
+          `Actual RES`    = median_SNSP.x * (sum_demand + sum_export) - sum_import,
+          `Actual Target` = `Actual RES` / sum_demand,
+          `Curtailed RES` = sum_res - `Actual RES`,
+          `Potential Target` = sum_res / sum_demand
         ) %>%
         rename_with(~ nice_names[.x], .cols = names(nice_names)) %>%
         mutate(date = format(date, "%Y-%m-%d"))
@@ -583,18 +647,21 @@ generation_server <- function(id, state) {
       SNSP    <- input$calc_snsp
       RES     <- input$calc_res     
       
-      curtailed_res    <- SNSP * (Demand + Export) - Import
-      curtailed_target <- curtailed_res / Demand
+      actual_res    <- SNSP * (Demand + Export) - Import
+      curtailed_res <- RES - actual_res
+      actual_target <- actual_res / Demand
       potential_target <- RES / Demand
       
       data.frame(
-        Metric = c("Curtailed RES",
-                   "Curtailed Target (%)",
+        Metric = c("Actual RES",
+                   "Curtailed RES",
+                   "Actual Target (%)",
                    "Potential Target (%)"),
         Value = c(
+          format(round(actual_res), big.mark = ",", scientific = FALSE),
           format(round(curtailed_res), big.mark = ",", scientific = FALSE),
-          if (Demand == 0 || is.na(curtailed_target)) "—"
-          else sprintf("%.2f%%", 100 * curtailed_target),
+          if (Demand == 0 || is.na(actual_target)) "—"
+          else sprintf("%.2f%%", 100 * actual_target),
           if (Demand == 0 || is.na(potential_target))   "—"
           else sprintf("%.2f%%", 100 * potential_target)
         ),
