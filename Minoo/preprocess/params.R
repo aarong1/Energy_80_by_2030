@@ -10,14 +10,18 @@ library(readxl)
 library(stringr)
 library(scales)
 library(shinydashboard)
+library(DT)
+library(rlang)
 
 
 nice_names <- c(
   sum_import    = "Imports",
   sum_export    = "Exports",
   sum_demand    = "Demand",
-  median_SNSP.x = "SNSP",
-  sum_res       = "RES (Solar + Wind)"
+  sum_avai_solar = "Available Solar",
+  sum_solar = "Generated Solar",
+  sum_avai_wind = "Available Wind",
+  sum_wind = "Generated Wind"
 )
 
 #load data
@@ -32,7 +36,7 @@ if (!"median_SNSP.x" %in% names(combined_df) && "median_SNSP" %in% names(combine
 }
 
 #variables to forecast
-candidate_vars <- c("sum_import", "sum_export", "sum_demand", "median_SNSP.x", "sum_res")
+candidate_vars <- c("sum_import", "sum_export", "sum_demand", "sum_avai_solar","sum_solar", "sum_avai_wind","sum_wind")
 vars <- intersect(candidate_vars, names(combined_df))
 missing_vars <- setdiff(candidate_vars, vars)
 if (length(missing_vars)) {
