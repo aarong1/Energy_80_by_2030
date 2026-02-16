@@ -19,12 +19,12 @@ plot_xgb_forecast <- function(res, target) {
  }
 
 get_train_label <- function(var, val_year, min_date) {
-   if (!is.null(min_date) && var %in% c("sum_import", "sum_export")) {
-     paste0("Train: ", substr(min_date, 1, 4), "–", val_year - 1)
-   } else {
-     paste0("Train: < ", val_year)
-   }
- }
+  if (!is.null(min_date) && var %in% c("sum_import", "sum_export", "sum_solar", "sum_avai_solar")) {
+    paste0("Train: ", substr(min_date, 1, 4), "–", val_year - 1)
+  } else {
+    paste0("Train: < ", val_year)
+  }
+}
 
 plot_fc <- function(res, target) {
   hist <- res$history %>% rename(value = all_of(target))
@@ -38,9 +38,16 @@ plot_fc <- function(res, target) {
                 fill = "#3182bd", alpha = 0.35) +
     geom_line(data = fc, aes(x = date, y = pred), color = "#08519c", linewidth = 1.2) +
     labs(
-      title = paste("XGBoost Forecast —", nice_names[[target]]),
+      title = paste("XGBoost Forecast:", nice_names[[target]]),
       subtitle = paste0(
-        get_train_label(target, val_year, min_date = if (target %in% c("sum_import","sum_export")) "2022-01-01" else NULL),
+        get_train_label(target, val_year, min_date <- 
+                          if (target %in% c("sum_import","sum_export")) {
+                            "2022-01-01"
+                          } else if (target %in% c("sum_solar","sum_avai_solar")) {
+                            "2018-01-01"
+                          } else {
+                            NULL
+                          }),
         " | Valid: ", val_year,
         " | Horizon: ", h, " months"
       ),
@@ -48,7 +55,19 @@ plot_fc <- function(res, target) {
       caption = "Bands: 80% (inner) and 95% (outer) via residual bootstrap"
     ) +
     theme_minimal(base_size = 14) +
-    theme(panel.grid.minor = element_blank())
+    theme(panel.grid.minor = element_blank()) +
+    scale_x_date(
+      date_breaks = "3 month",
+      date_labels = "%b %Y"
+    ) + 
+    theme(
+      axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1
+      ))
+      
+  
 }
 
 run_lm_forecast <- function(monthly_df, target, val_year, h, min_train_date = NULL) {
@@ -123,17 +142,34 @@ plot_fc_lm <- function(res_lm, target) {
     geom_line(data = fc_lm, aes(x = date, y = pred),
               color = "#d94801", linewidth = 1.2, linetype = "dashed") +
     labs(
-      title    = paste("Linear Model Forecast —", nice_names[[target]]),
+      title    = paste("Linear Model Forecast:", nice_names[[target]]),
       
       subtitle = paste0(
-        get_train_label(target, val_year, min_date = if (target %in% c("sum_import","sum_export")) "2022-01-01" else NULL),
+        get_train_label(target, val_year, min_date <- 
+                          if (target %in% c("sum_import","sum_export")) {
+                            "2022-01-01"
+                          } else if (target %in% c("sum_solar","sum_avai_solar")) {
+                            "2018-01-01"
+                          } else {
+                            NULL
+                          }),
         " | Valid: ", val_year,
         " | Horizon: ", h, " months"
       ),
       x = "Date", y = nice_names[[target]],
       caption = "80% and 95% forecast intervals"
     ) +
-    theme_minimal(base_size = 14)
+    theme_minimal(base_size = 14)+
+    scale_x_date(
+      date_breaks = "3 month",
+      date_labels = "%b %Y"
+    ) + 
+    theme(
+      axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1
+      ))
 }
 
 monthly_df <- combined_df %>%
@@ -143,8 +179,10 @@ monthly_df <- combined_df %>%
     sum_import    = if ("sum_import" %in% vars)    agg_fun(sum_import,    na.rm = TRUE) else NULL,
     sum_export    = if ("sum_export" %in% vars)    agg_fun(sum_export,    na.rm = TRUE) else NULL,
     sum_demand    = if ("sum_demand" %in% vars)    agg_fun(sum_demand,    na.rm = TRUE) else NULL,
-    median_SNSP.x = if ("median_SNSP.x" %in% vars) agg_fun(median_SNSP.x, na.rm = TRUE) else NULL,
-    sum_res = if ("sum_res" %in% vars) agg_fun(sum_res, na.rm = TRUE) else NULL,
+    sum_solar    = if ("sum_solar" %in% vars)    agg_fun(sum_solar,    na.rm = TRUE) else NULL,
+    sum_wind    = if ("sum_wind" %in% vars)    agg_fun(sum_wind,    na.rm = TRUE) else NULL,
+    sum_avai_solar    = if ("sum_avai_solar" %in% vars)    agg_fun(sum_avai_solar,    na.rm = TRUE) else NULL,
+    sum_avai_wind = if ("sum_avai_wind" %in% vars) agg_fun(sum_avai_wind, na.rm = TRUE) else NULL,
     .groups = "drop"
   ) %>%
   mutate(date = as.Date(sprintf("%04d-%02d-01", year, month))) %>%
@@ -343,4 +381,25 @@ run_xgb_forecast <- function(monthly_df, target, val_year, h, max_lag, roll_wind
     forecast = fc_with_pi,
     history = monthly_df %>% select(date, all_of(target))
   )
+}
+
+pick_fc_col <- function(df, choice) {
+  candidates <- switch(
+    choice,
+    "pred" = c("pred", "yhat", "mean", "point"),
+    "lo80" = c("lo80", "lower80", "lower_80", "lo_80"),
+    "hi80" = c("hi80", "upper80", "upper_80", "hi_80"),
+    "lo95" = c("lo95", "lower95", "lower_95", "lo_95"),
+    "hi95" = c("hi95", "upper95", "upper_95", "hi_95"),
+    c("pred")
+  )
+  col <- candidates[candidates %in% names(df)]
+  if (length(col) == 0) "pred" else col[[1]]
+}
+
+snap_to_nearest_date <- function(x_numeric, dates) {
+  if (is.null(x_numeric) || length(dates) == 0) return(NA)
+  target <- as.Date(round(x_numeric), origin = "1970-01-01")
+  diffs <- abs(as.numeric(dates - target))
+  dates[which.min(diffs)]
 }
