@@ -758,7 +758,7 @@ generation_server <- function(id, state) {
       selected_date2(NULL)
     })
     
-    #dd_hist <- read.csv("./data/dispatch_down_history.csv", stringsAsFactors = FALSE)
+    dd_hist <- read.csv("./data/dispatch_down_history.csv", stringsAsFactors = FALSE)
     percent_to_num <- function(x) as.numeric(sub("%", "", x)) / 100
     dd_hist <- dd_hist %>%
       mutate(across(where(is.character), percent_to_num)) %>%

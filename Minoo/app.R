@@ -25,8 +25,7 @@ ui <- fluidPage(
     var frag = (idx >= 0) ? href.substring(idx + 1) : '';
     if (frag) Shiny.setInputValue('diagram_click', frag, {priority: 'event'});
   }, true);
-"))
-    ,
+")),
     tags$style(HTML("
       .back-bar { position: sticky; top: 0; z-index: 10; background: #fff; padding: 8px 0; }
       .centered-content { text-align: center; }
