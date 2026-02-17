@@ -1,11 +1,11 @@
 #load modules
-source("preprocess/params.R")
-source("preprocess/functions.R")
-source("R/mod_diagram.R")
-source("R/mod_generation.R")
-source("R/mod_transmission.R")
-source("R/mod_distribution.R")
-source("R/mod_supply.R")
+source("./preprocess/params.R")
+source("./preprocess/functions.R")
+source("./R/mod_diagram.R")
+source("./R/mod_generation.R")
+source("./R/mod_transmission.R")
+source("./R/mod_distribution.R")
+source("./R/mod_supply.R")
 
 #ui
 ui <- fluidPage(
