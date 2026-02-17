@@ -1,8 +1,5 @@
-target_date = '2030-01-01'
+  target_date = '2030-01-01'
 end_date = end_date
-
-
-
 
 # By end date ----
 current_projects_outcome_target_date <- current_projects_outcome |> 

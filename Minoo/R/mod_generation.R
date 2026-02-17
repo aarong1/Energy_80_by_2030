@@ -643,7 +643,7 @@ generation_server <- function(id, state) {
 
 #---model-based predictions
     results <- local({
-      file <- "C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/results_all_vars.rda"
+      file <- "./data/results_all_vars.rda"
       env <- new.env()
       load(file, envir = env)
       env$results
@@ -758,7 +758,7 @@ generation_server <- function(id, state) {
       selected_date2(NULL)
     })
     
-    dd_hist <- read.csv("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/dispatch_down_history.csv", stringsAsFactors = FALSE)
+    dd_hist <- read.csv("./data/dispatch_down_history.csv", stringsAsFactors = FALSE)
     percent_to_num <- function(x) as.numeric(sub("%", "", x)) / 100
     dd_hist <- dd_hist %>%
       mutate(across(where(is.character), percent_to_num)) %>%

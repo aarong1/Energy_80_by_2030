@@ -41,7 +41,6 @@ ui <- page_fluid(
 
   # Add ion range slider CSS and JS plus Font Awesome and MathJax
   tags$head(
-    
     # External CDN resources
     tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"),
     tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
@@ -1009,14 +1008,13 @@ server <- function(input, output, session) {
                                         prob = c(transition_probs()$prob [transition_probs()$from == broad_status],
                                                  1-transition_probs()$prob [transition_probs()$from == broad_status]),
                                         size = 1)) |> 
-      
+
       mutate(
         passed_connection_time = (get_empirical_time(pipeline,tech,broad_status)),
         passed_connection_time_wk = as.numeric(passed_connection_time, units = 'weeks' ) ,#(60*60*24*7),
         passed_connection_date = passed_planning_date + passed_connection_time
       ) |> 
-      
-      mutate(broad_status = 'Construction')|> 
+      mutate(broad_status = 'Construction') |> 
       mutate(passed_construction = sample(c(T,F),
                                           replace = T,
                                           prob = c(transition_probs()$prob [transition_probs()$from == broad_status],

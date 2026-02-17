@@ -25,7 +25,7 @@ nice_names <- c(
 )
 
 #load data
-load("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/inputs.rda")
+load("./data/inputs.rda")
 
 #ensure date type
 stopifnot(exists("combined_df"))
@@ -53,4 +53,11 @@ roll_windows <- c(3, 6, 12) #rolling mean windows
 seed         <- 2026
 
 set.seed(seed)
+
+
+
+
+
+
+
 
