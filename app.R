@@ -9,6 +9,8 @@ library(memoise)
 library(digest)
 library(echarts4r)
 
+options(shiny.devmode = TRUE)
+
 target_date = '2030-01-01'
 end_date = '2032-01-01'
 
@@ -68,56 +70,31 @@ ui <- page_fluid(
           $('#loading').hide();
         }
       });
+      
+      // Initialize Bootstrap tooltips
+      $(document).ready(function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle=\"tooltip\"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      });
     "))
-  
     
   ),
 
-  # Navigation bar with ScrollSpy functionality
-  tags$nav(class = "navbar navbar-expand-lg glass-card p-2 fixed-top", #  bg-white
+  # Navigation bar - simplified with text only
+  tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 fixed-top", #  bg-white
            `data-bs-theme` = "light",
-    div(class = "container-fluid",
-      tags$a(class = "navbar-brand", href = "#top"
-             #img(src='./DfE.jpeg')
-        #icon("bolt"), " Energy Planning Dashboard"
+    div(class = "container-fluid d-inline",
+      tags$a(class = "navbar-brand fw-bold d-inline", href = "#top",
+        "Renewable Energy Simulation and Projection",#br(),
+        p(class = 'lead d-inline',"80% by 2030")
       ),
-      tags$button(
-        class = "navbar-toggler", 
-        type = "button", 
-        `data-bs-toggle` = "collapse", 
-        `data-bs-target` = "#navbarColor02", 
-        `aria-controls` = "navbarColor02", 
-        `aria-expanded` = "false", 
-        `aria-label` = "Toggle navigation",
-        tags$span(class = "navbar-toggler-icon")
-      ),
-      div(class = "collapse navbar-collapse", id = "navbarColor02",
-        tags$ul(class = "navbar-nav gap-4 me-auto ",
-          tags$li(class = "nav-item",
-            tags$a(class = "nav-link", href = "#parameters",
-              icon("sliders-h"), "Top level NI Energy Parameters"
-            )
-          ),
-          tags$li(class = "nav-item",
-            tags$a(class = "nav-link", href = "#capacity", icon("battery-three-quarters"), " Offshore Pre-planning and CFs")
-          ),
-          tags$li(class = "nav-item",
-            tags$a(class = "nav-link", href = "#progression", icon("arrow-right"), "Stage Progression")
-          ),
-          tags$li(class = "nav-item",
-            tags$a(class = "nav-link", href = "#timelines", icon("clock"), "Stage Duration")
-          )#,
-          # tags$li(class = "nav-item",
-          #   tags$a(class = "nav-link", href = "#dashboard", icon("chart-pie"), " Dashboard")
-          # )
-        )#,
-        # tags$form(class = "d-flex", role = "search",
-        #   tags$input(class = "form-control me-sm-2", type = "search", placeholder = "Search parameters"),
-        #   tags$button(class = "btn btn-secondary my-2 my-sm-0", type = "submit", 
-        #     icon("search")
-        #   )
-        # )
-      )
+      # div(class = "ms-auto",
+      #   tags$span(class = "navbar-text",
+      #     "80% by 2030"
+      #   )
+      # )
     )
   ),
   
@@ -129,6 +106,50 @@ ui <- page_fluid(
   div( class = 'd-flex justify-content-between flex-grow',
        ### column - 1 ----
     div(class = 'px-5 w-25 ',#mx-5
+    
+    # ScrollSpy Navigation in left panel
+    div(class = "mb-5 position-fixed", style = "top: 50px; z-index: 100;",
+      div(class = "glass-card card",
+        div(class = "card-body p-2",
+          tags$ul(class = "nav nav-pills justify-content-center gap-2 mb-3",
+          tags$li(class="nav-item",
+                     
+            tags$a(class = "nav-link p-2", href = "#parameters",
+              title = "Top level NI Energy Parameters",
+              `data-bs-toggle` = "tooltip",
+              `data-bs-placement` = "bottom",
+              icon("sliders-h")
+            )),
+            tags$a(class = "nav-link p-2", href = "#capacity",
+              title = "Offshore Pre-planning and Capacity Factors",
+              `data-bs-toggle` = "tooltip",
+              `data-bs-placement` = "bottom",
+              icon("battery-three-quarters")
+            ),
+            tags$a(class = "nav-link p-2", href = "#progression",
+              title = "Stage Progression Probability",
+              `data-bs-toggle` = "tooltip",
+              `data-bs-placement` = "bottom",
+              icon("arrow-right")
+            ),
+            tags$a(class = "nav-link p-2", href = "#timelines",
+              title = "Stage Duration Timelines",
+              `data-bs-toggle` = "tooltip",
+              `data-bs-placement` = "bottom",
+              icon("clock")
+            )
+          )
+        ),
+        actionButton(inputId = 'submit', 
+                          label = tagList(icon("play"), " Run Simulation"),
+                          class = "btn btn-primary",
+                          style = "white-space: nowrap;"),
+      )
+    ),
+    
+    # Add spacing to prevent overlap
+    div(style = "margin-top: 140px;"),
+    
     # Parameters Section
     div(id = "parameters", class = "scroll-section",
       # h2(class = 'text-body-secondary', icon("sliders-h"), " Energy Parameters"),
@@ -431,7 +452,7 @@ ui <- page_fluid(
   ),
   ### column - 2----
   #column(6, class = 'px-5 ',#offset = 1, mx-5
-  div(class = 'px-5 ',#offset = 1, mx-5)
+  div(class = 'px-5 flex-grow-1',#offset = 1, mx-5
          # Dashboard Section
          #div(id = "dashboard", class = "scroll-section",
            # h2(class = "text-center mb-4", icon("chart-pie"), " Energy Dashboard"),
@@ -441,56 +462,46 @@ ui <- page_fluid(
      
          
          # Scenario input section
-      div(class='d-flex flex-column justify-content-center align-items-center ',
-          div(class='w-50',
-         div(class = "input-group mb-3",
-             tags$input(type = "text", class = "form-control", 
-                        placeholder = " Submit Scenario for simulation ", 
-                        `aria-label` = "Scenario name input", 
-                        disabled = T,
-                        `aria-describedby` = "button-addon2"),
-             actionButton(inputId = 'submit', 
-                          label = tagList(icon("save"), " Run Simulation"),
-                          class = "btn btn-primary",
-                          style = "white-space: nowrap;")#,
+      # div(class='d-flex flex-column justify-content-center align-items-center ',
+      #     div(class='w-50',
+      #    div(class = "input-group mb-3",
+      #        tags$input(type = "text", class = "form-control", 
+      #                   placeholder = " Submit Scenario for simulation ", 
+      #                   `aria-label` = "Scenario name input", 
+      #                   disabled = T,
+      #                   `aria-describedby` = "button-addon2"),
 
-         ),
+            #  actionButton(inputId = 'submit', 
+            #               label = tagList(icon("play"), " Run Simulation"),
+            #               class = "btn btn-primary",
+            #               style = "white-space: nowrap;"),
+
+
+        #  ),
       
          # Cache management section
-         div(class = "input-group mb-3",
-             tags$button(class = "btn btn-outline-secondary btn-sm", type = "button", id = "clear-cache",
-                         icon("trash"), " Clear Cache",
-                         title = "Clear all cached simulation results"
-             ),
+        #  div(class = "input-group mb-3",
+        #      tags$button(class = "btn btn-outline-secondary btn-sm", type = "button", id = "clear-cache",
+        #                  icon("trash"), " Clear Cache",
+        #                  title = "Clear all cached simulation results"
+        #      ),
              
-             tags$input(type = "text", class = "form-control", 
-                        placeholder = "Clear cache", 
-                        `aria-label` = "Clear cache", 
-                        disabled = T,
-                        `aria-describedby` = "Clear cache")
+        #      tags$input(type = "text", class = "form-control", 
+        #                 placeholder = "Clear cache", 
+        #                 `aria-label` = "Clear cache", 
+        #                 disabled = T,
+        #                 `aria-describedby` = "Clear cache")
              
-             )
+        #      )
          
-         ),
+        #  )#,
              
              # div(class = "input-group-text small text-muted",
              #     "Cache saves time for identical parameters"
              #)
              
-         ),
-             div(id= 'loading', class = 'alert alert-danger rounded-3 p-0 float-right ms-5',
-                  style = 'overflow:hidden;opacity:0.7;display:none;',
-             div(class='d-flex gap-2 align-items-baseline',
-                 span( class="loader"),
-                   
-                   h4(class = 'ps-5 lead','Loading '),
-      span(class = 'badge pill-rounded text-bg-light me-3 ',
-          style = '',
-          tags$small(class=' mb-2','Inputs locked')
-      )
-      ),
-                 
-             ),
+         #),
+        
       
  
          # div(class = "module-border-wrap",
@@ -504,73 +515,89 @@ ui <- page_fluid(
            # plotOutput("distPlot"),
          # plotOutput('preplanning_cumulative'),
       
-     # div(class = 'bg-light rounded-5 p-2',
-      h3(class = 'text-body-secondary p-5', "Pre-planning Cumulative"),
-      echarts4rOutput('preplanning_cumulative_echarts'),
-      #),
-      
+     # Charts arranged horizontally in rows
+     div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
+       # Pre-planning Cumulative
+       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-line"), " Pre-planning Cumulative"),
+         div(style = 'height: 300px;',
+           echarts4rOutput('preplanning_cumulative_echarts', height = '300px')
+         ),
+         div(class = 'd-flex justify-content-center mt-2',
            div(
-             style =
-               "border:10px solid red;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-             tags$small(class = 'text-muted', ' Cumulative'),
-             #h5( "400 MW"),
-             
-             h3(textOutput(inline = T,'new_res_preplanning_cumulative_end_date'),'MW'),
-             
-             
-             tags$small(class = 'text-muted text-center',' by the End of the simulation')
-
-           ),
-     h3(class = 'text-body-secondary p-5', "Pre-planning Monthly"),
-     
-      echarts4rOutput('preplanning_yearly'),
-         
-         div(
-           style =
-             "border:10px solid red;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-           tags$small(class = 'text-muted', 'Annual New RES'),
-           h3(textOutput(inline = T,'new_res_preplanning_yearly_end_date'),'MW'),
-           tags$small(class = 'text-muted',' at simulation end')
-           
+             style = "border:5px solid red;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+             tags$small(class = 'text-muted', 'Cumulative'),
+             h5(textOutput(inline = T,'new_res_preplanning_cumulative_end_date'),'MW'),
+             tags$small(class = 'text-muted text-center', style = 'font-size: 0.7rem;', 'by end of simulation')
+           )
+         )
+       ),
+       # Pre-planning Monthly
+       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-bar"), " Pre-planning Monthly"),
+         div(style = 'height: 300px;',
+           echarts4rOutput('preplanning_yearly', height = '300px')
          ),
-     h3(class = 'text-body-secondary p-5', "Current Projects Cumulative"),
+         div(class = 'd-flex justify-content-center mt-2',
+           div(
+             style = "border:5px solid red;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+             tags$small(class = 'text-muted', 'Annual New RES'),
+             h5(textOutput(inline = T,'new_res_preplanning_yearly_end_date'),'MW'),
+             tags$small(class = 'text-muted', style = 'font-size: 0.7rem;', 'at simulation end')
+           )
+         )
+       )
+     ),
      
-      echarts4rOutput('current_cumulative'),
-         div(
-           style =
-             "border:10px solid #2196F3;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-           tags$small(class = 'text-muted', 'Total New RES') ,
-           h3(textOutput(inline = T,'new_res_current_cumulative_end_date'),'MW'),
-           tags$small(class = 'text-muted',' by simulation end')
-           
+     div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
+       # Current Projects Cumulative
+       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-area"), " Current Projects Cumulative"),
+         div(style = 'height: 300px;',
+           echarts4rOutput('current_cumulative', height = '300px')
          ),
-     h3(class = 'text-body-secondary p-5', "Current Projects Monthly"),
-     
-         echarts4rOutput('current_yearly')  ,
-         div(
-           style =
-             "border:5px solid var(--bs-info);justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-           tags$small(class = 'text-muted', 'New RES'),
-           h3(textOutput(inline = T,'new_res_current_yearly_end_date'),'MW'),
-           tags$small(class = 'text-muted text-centre text-center','current pipeline at the end of window')
-           
+         div(class = 'd-flex justify-content-center mt-2',
+           div(
+             style = "border:5px solid #2196F3;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+             tags$small(class = 'text-muted', 'Total New RES'),
+             h5(textOutput(inline = T,'new_res_current_cumulative_end_date'),'MW'),
+             tags$small(class = 'text-muted', style = 'font-size: 0.7rem;', 'by simulation end')
+           )
+         )
+       ),
+       # Current Projects Monthly
+       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("calendar-alt"), " Current Projects Monthly"),
+         div(style = 'height: 300px;',
+           echarts4rOutput('current_yearly', height = '300px')
          ),
+         div(class = 'd-flex justify-content-center mt-2',
+           div(
+             style = "border:5px solid var(--bs-info);justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+             tags$small(class = 'text-muted', 'New RES'),
+             h5(textOutput(inline = T,'new_res_current_yearly_end_date'),'MW'),
+             tags$small(class = 'text-muted text-center', style = 'font-size: 0.7rem;', 'current pipeline')
+           )
+         )
+       )
+     ),
      
-     h3(class = 'text-body-secondary p-5', "Offshore Wind Capacity Monthly"),
-     
-     
-     echarts4rOutput('offshore_wind_plot'),
-     
-     
-     div(
-       style =
-         "border:10px solid limegreen;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-       tags$small(class = 'text-muted', 'Annually producing'),
-       h3(textOutput(inline = T,'offshore_wind_capacity'),'MW/yr'),
-       h3('From ',textOutput(inline = T,'offshore_wind_start')),
-       
-       #tags$small(class = 'text-muted text-centre text-center','current pipeline by 2030')
-       
+     div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
+       # Offshore Wind Capacity Monthly
+       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("water"), " Offshore Wind Capacity Monthly"),
+         div(style = 'height: 300px;',
+           echarts4rOutput('offshore_wind_plot', height = '300px')
+         ),
+         div(class = 'd-flex justify-content-center mt-2',
+           div(
+             style = "border:5px solid limegreen;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+             tags$small(class = 'text-muted', 'Annually producing'),
+             h6(textOutput(inline = T,'offshore_wind_capacity'),'MW/yr'),
+             h6('From ',textOutput(inline = T,'offshore_wind_start'))
+           )
+         )
+       )
      ),
      
            # Real-time parameter status
@@ -593,6 +620,24 @@ ui <- page_fluid(
   ### column-sticky ----
 
   div(style = 'position:sticky; top:8%; height:90vh;',
+
+       # Loading overlay - centered and doesn't affect layout
+       div(id= 'loading', 
+           class = 'alert alert-danger rounded-3 p-3',
+           style = 'position:fixed;top:10%;left:60%;transform:translate(-50%,-50%);z-index:9999;opacity:0.8;display:none;box-shadow:0 4px 6px rgba(0,0,0,0.3);',
+             div(class='d-flex gap-3 align-items-center',
+                 span(class="loader"),
+                   
+                   h4(class = 'mb-0 lead','Loading '),
+      span(class = 'badge pill-rounded text-bg-light',
+          style = '',
+          tags$small(class=' mb-0','Inputs locked')
+      )
+      )
+                 
+             ),
+
+             
       div(class = 'py-2 px-5 me-5 bg-info-subtle rounded-5 position-relative',#offset = 1, mx-5
       
       # div(class = 'alert alert-primary rounded-2 top-0 start-100',
@@ -892,11 +937,12 @@ server <- function(input, output, session) {
     
   })
   
+  
   observe({
     print(params$progression_prob_method)
         df <- switch( 
           params$progression_prob_method,
-                'progression_prob_empirical' =  transition_probs_empirical(),
+                'empirical' =  transition_probs_empirical(),
                 'progression_prob_custom' = tribble(
         ~from, ~to, ~prob,
         'Planning', 'Connection', params$planning_connection_prob /100,
@@ -904,6 +950,7 @@ server <- function(input, output, session) {
         'Construction', 'Completed', params$connection_completion_prob /100
       )
         )
+        print('df')
         print(df)
       transition_probs(df)
     })
@@ -935,7 +982,7 @@ server <- function(input, output, session) {
     
   
   observeEvent(input$submit, { 
-    print('Start Run')
+    print('Start Run1')
     
       session$sendCustomMessage("toggleLoadingBtn", "show")
       
@@ -968,26 +1015,32 @@ server <- function(input, output, session) {
       for( i in 1:nrow(shiny_forecast())){
         print(i)
         n <- t(shiny_forecast())[,i]
-        #print(n)
+        # print(n)
         nn <- lift_historic_projects(pipeline,
                                      n['tech'],
                                      n[['Date']],
                                      n=as.numeric(n['sample_deterministic']))
-        #print(nn)
+        # print(nn)
         
         nn$run = j
-        
+          
         forward_projects <- rbind(forward_projects, nn)
         
       }
     }
     
+    print('forward projects')
+    print(forward_projects)
     
     forward_projects <- forward_projects |> 
       mutate(broad_status = 'Planning') |> 
       mutate(broad_status_start = 'Planning') |> 
       mutate(Date = as.Date(Date))
 
+    print(head(forward_projects))
+    print(class(forward_projects))
+    
+    print(transition_probs()$prob [transition_probs()$from == unique(forward_projects$broad_status)])
     
     forward_projects <- forward_projects |> 
       rowwise() |> 
@@ -1002,6 +1055,7 @@ server <- function(input, output, session) {
         passed_planning_time_wk = as.numeric(passed_planning_time, units = 'weeks' ) ,#(60*60*24*7),
         passed_planning_date = Date + passed_planning_time) |>
       mutate(broad_status = 'Connection') |> 
+      
       
       mutate(passed_connection = sample(c(T,F),
                                         replace = T,
@@ -1027,7 +1081,9 @@ server <- function(input, output, session) {
       
       mutate(broad_status = 'Completed')
     
-    
+    # print('forward_projects')
+    # print(forward_projects)
+    write.csv(forward_projects,'forward_projects.csv')
     
     x <- forward_projects |> 
       filter(passed_planning &
@@ -1040,6 +1096,9 @@ server <- function(input, output, session) {
       summarise(MW = sum(`Installed Capacity (MWelec)`,na.rm = T),
                 no_proj = n()) |> 
       ungroup()
+    
+    # print('x')
+    # print(x)
     
     
     # yrs = unique(floor_date(seq( from = as.Date('2025-01-01'), 
@@ -1082,12 +1141,11 @@ server <- function(input, output, session) {
   #Current Projects ---- 
   observeEvent(input$submit, { 
     
+    print('Start Run')
+    
     print(transition_probs())
     
     print(stage_duration() )
-    
-    print('Start Run')
-    
     
     current_projects <- pipeline  |> 
       filter(broad_status %in% c('Planning','Connection','Construction')) |> 
@@ -1174,11 +1232,14 @@ server <- function(input, output, session) {
               # print(transition_probs()$from == broad_status)
               # print(transition_probs()$prob[transition_probs()$from == broad_status])
               
+              print(unique(list_statuses[[i]]$broad_status))
+              print(transition_probs())
+              
               
               list_statuses[[i]] <- list_statuses[[i]] |> 
 
               rowwise() |>
-  mutate(passed_connection = ifelse(runif(n = 1) < transition_probs()$prob [transition_probs()$from == broad_status],
+              mutate(passed_connection = ifelse(runif(n = 1) < (transition_probs()$prob [transition_probs()$from == broad_status]),
                                                 T,
                                                 F)
                      
@@ -1186,13 +1247,11 @@ server <- function(input, output, session) {
               
               mutate(
                 passed_connection_time = (get_empirical_time(pipeline,tech,broad_status)),
-                passed_connection_time_wk = as.numeric(passed_connection_time, units = 'weeks' ) ,#(60*60*24*7),
+                passed_connection_time_wk = as.numeric(passed_connection_time, units = 'weeks' ) , #(60*60*24*7),
                 passed_connection_date = passed_planning_date + passed_connection_time) |> 
               
-              mutate(broad_status = 'Construction')|> ungroup()
+              mutate(broad_status = 'Construction') |> ungroup()
             },
-            
-            
             
             Construction = {
               list_statuses[[i]] <- list_statuses[[i]] |> 
@@ -1222,6 +1281,9 @@ server <- function(input, output, session) {
       )
     }
     
+    print('current_projects_projected_forward')
+    print(current_projects_projected_forward)
+    write.csv(current_projects_projected_forward,'current_projects_projected_forward.csv')
     
     
     x <- current_projects_projected_forward |> 
@@ -1245,13 +1307,11 @@ server <- function(input, output, session) {
       
       expand.grid(yr = 2012:year(end_date),
                   mn = 1:12,
-                  run = 1:params$number_runs )|> 
+                  run = 1:params$number_runs ) |> 
       mutate(finished = as.Date(paste0(yr, ifelse(mn < 10, paste0('-0', mn,'-01'), paste0('-',mn,'-01'))))) |> 
       left_join(x) |> 
       replace_na(list(MW=0)) |> 
     current_projects_outcome_first()
-    
-   
     
   })
   
@@ -1268,12 +1328,22 @@ server <- function(input, output, session) {
     
     print(params$offshore_start)
     
+   
+    
+    write.csv(x =     data.frame(finished = mons) |> 
+                mutate(mean = ifelse(finished > params$offshore_start, 
+                                     params$offshore_capacity/12, 
+                                     0)
+                ) |> 
+                mutate(mean = mean*params$offshore_included ), file = 'offshore_wind.csv')
+    
     data.frame(finished = mons) |> 
       mutate(mean = ifelse(finished > params$offshore_start, 
                            params$offshore_capacity/12, 
                            0)
-             ) |> 
+      ) |> 
       mutate(mean = mean*params$offshore_included )
+    
   })
   
   observeEvent(current_projects_outcome_first(), {
@@ -1337,6 +1407,8 @@ server <- function(input, output, session) {
   })
 
     observeEvent(forward_projects_outcome_first(), {
+      
+      # write.csv(forward_projects_outcome_first(),'forward_projects_outcome_first.csv')
       
       conf_level <- 0.95
       alpha      <- 1 - conf_level
@@ -1418,7 +1490,6 @@ server <- function(input, output, session) {
       
       #req(simulation_results$forward_projects_outcome_cumulative)
       
-      
       preplanning_cumulative_echart(forward_projects_outcome_cumulative())
       
     })
@@ -1439,17 +1510,17 @@ server <- function(input, output, session) {
         
   
 })
-    
-    
-observe({
 
+observe({
+ print('current_projects_outcome')
+  print(current_projects_outcome())
   current_projects_outcome_target_date <- current_projects_outcome() |>
     filter(year(finished) == year(target_date)) |>
     pull(mean) |> sum()
 
   forward_projects_outcome_target_date <- forward_projects_outcome() |>
     filter(year(finished) == year(target_date)) |>
-    pull(mean)|> sum()
+    pull(mean) |> sum()
 
   current_projects_outcome_cumulative_target_date <- current_projects_outcome_cumulative() |>
     filter(finished == target_date) |>
