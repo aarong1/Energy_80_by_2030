@@ -113,7 +113,6 @@ ui <- page_fluid(
         div(class = "card-body p-2",
           tags$ul(class = "nav nav-pills justify-content-center gap-2 mb-3",
           tags$li(class="nav-item",
-                     
             tags$a(class = "nav-link p-2", href = "#parameters",
               title = "Top level NI Energy Parameters",
               `data-bs-toggle` = "tooltip",

@@ -8,13 +8,17 @@ html {
 
 body{
 }
+
+.tab-pane{
+  margin-top:0px !important;
+}
 /* Base wrapper */
 .html-widget.shiny-bound-output { position: relative; }
 .html-widget.shiny-bound-output.recalculating > * { opacity: 0; }
 
 /* === Static bars (bottom-aligned, equally spaced) === */
 .html-widget.shiny-bound-output.recalculating::before {
-  min-width:500px;
+  min-width:200px;
   content: "";
   position: absolute;
   inset: 0;
