@@ -699,7 +699,7 @@ ui <- navbarPage(
              # Loading overlay - centered and doesn't affect layout
              div(id= 'loading', 
                  class = 'alert alert-danger rounded-3 p-3',
-                 style = 'position:fixed;top:10%;left:60%;transform:translate(-50%,-50%);z-index:9999;opacity:0.8;display:none;box-shadow:0 4px 6px rgba(0,0,0,0.3);',
+                 style = 'position:fixed;top:5%;left:90%;transform:translate(-50%,-50%);z-index:9999;opacity:1;display:none;box-shadow:0 4px 6px rgba(0,0,0,0.3);',
                  div(class='d-flex gap-3 align-items-center',
                      span(class="loader"),
                      
@@ -711,7 +711,6 @@ ui <- navbarPage(
                  )
                  
              ),
-             
              
              div(class = 'py-2 px-5 me-5 bg-info-subtle rounded-5 position-relative',#offset = 1, mx-5
                  
@@ -863,7 +862,7 @@ server <- function(input, output, session) {
   # To complete: Copy all server logic from app.R (lines 734-1637) here
   # Full Renewable Simulation Server Logic from app.R
 
-server <- function(input, output, session) {
+# server <- function(input, output, session) {
   
   #Offshore ----
   
@@ -1192,7 +1191,6 @@ server <- function(input, output, session) {
                                         prob = c(transition_probs()$prob [transition_probs()$from == broad_status],
                                                  1-transition_probs()$prob [transition_probs()$from == broad_status]),
                                         size = 1)) |> 
-
       mutate(
         passed_connection_time = (get_empirical_time(pipeline,tech,broad_status)),
         passed_connection_time_wk = as.numeric(passed_connection_time, units = 'weeks' ) ,#(60*60*24*7),
@@ -1620,6 +1618,8 @@ server <- function(input, output, session) {
       
       #req(simulation_results$forward_projects_outcome_cumulative)
       
+      print('hello')
+      
       preplanning_cumulative_echart(forward_projects_outcome_cumulative())
       
     })
@@ -1764,11 +1764,11 @@ observe({
 }
 
 # Run app
-shinyApp(ui = ui, server = server)
-NA
+# shinyApp(ui = ui, server = server)
+# NA
   # End of Renewable Simulation Logic
 
-}
+
 
 shinyApp(ui, server)
 
