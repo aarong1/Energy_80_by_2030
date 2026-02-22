@@ -156,7 +156,7 @@ ui <- navbarPage(
     ),
     
     # Navigation bar - simplified with text only
-    tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 ", #  fixed-top bg-white
+    tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 sticky-top", #  fixed-top bg-white
              `data-bs-theme` = "light",
              div(class = "container-fluid d-inline",
                  tags$a(class = "navbar-brand fw-bold d-inline", href = "#top",
@@ -819,7 +819,18 @@ server <- function(input, output, session) {
       diagram_ui("diagram")  
     } else {
       tagList(
-        div(class = "back-bar", actionButton("go_back", "← Back to Diagram")),
+        tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 sticky-top", #  fixed-top bg-white
+                 `data-bs-theme` = "light",
+                 div(class = "container-fluid d-inline",
+                     actionButton("go_back", "← Back to Diagram"), #br(),br(),
+                     tags$a(class = "ms-3 ps-3 navbar-brand fw-bold d-inline", href = "#top",
+                            paste(state$selected_page, 'Targets, Improvement and Projections'),#br(),
+                            p(class = 'lead d-inline',"80% by 2030")
+                     )
+      
+                 )
+
+            ),
         switch(
           state$selected_page,
           "Generation"   = generation_ui("generation"),
@@ -1746,14 +1757,8 @@ observe({
   
   target_pct = round((total_new_res_target_date + existing_res_target_date)/TER_target_date)
   
-  target_status_words_target_date = ifelse(target_pct >= 0.8, 'on track', ifelse(target_pct >= 0.75, 'slightly behind', 'significantly behind'))
-  target_status_color_target_date = ifelse(target_pct >= 0.8, 'green', ifelse(target_pct >= 0.75, 'orange', 'red'))
-
-
-  output$pct_2030 <- renderText({
-
-  })
-
+  target_status_words_target_date = ifelse(target_pct >= 0.8, 'on track', ifelse(target_pct >= 0.7, 'slightly behind', 'significantly behind'))
+  target_status_color_target_date = ifelse(target_pct >= 0.8, 'green', ifelse(target_pct >= 0.7, 'orange', 'red'))
 
   output$pct_2030 <- renderText({
 
@@ -1763,19 +1768,8 @@ observe({
   
 }
 
-# Run app
-# shinyApp(ui = ui, server = server)
-# NA
-  # End of Renewable Simulation Logic
-
-
 
 shinyApp(ui, server)
-
-# app <- shinyApp(ui, server)
-# shiny::runApp(app, port = 8733, host = "127.0.0.1", launch.browser = TRUE)
-
-
 
 
 

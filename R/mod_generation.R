@@ -4,19 +4,29 @@ generation_ui <- function(id) {
   ns <- NS(id)
   
   tagList(
-    h1("Generation Dashboard", 
-       style = "color:#2a2a2a; margin-bottom:25px;"),
-    
-    tabsetPanel(
+  #     tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 fixed-top", #  bg-white
+  #          `data-bs-theme` = "light",
+  #   div(class = "container-fluid d-inline",
+  #     tags$a(class = "navbar-brand fw-bold d-inline", href = "#top",
+  #       "Generation Dashboard",#br(),
+  #       p(class = 'lead d-inline',"80% by 2030")
+  #     )
+  #   )
+  # ),
+br(),br(),
+    tabsetPanel(    type = 'pills',
       id = ns("tabs"),
       
       tabPanel(
         title = "Assumptions & Current Data",
         
 #-------daily and monthly SNSP (historical data)
-        h2("Tier 1: A11 – SNSP, inertia, RoCoF & minimum conventional generation limits",
-           style = "color: #355070; margin-bottom : 70px; text-align: left;"),
-        
+br(),br(),
+        div(class= 'alert alert-light', 
+            h2("Tier 1: A11 – SNSP, inertia, RoCoF & minimum conventional generation limits"#,
+           # style = "color: #355070; margin-bottom : 70px; text-align: left;")
+            )
+           ),
         
         h4(HTML(
           'According to the
@@ -98,7 +108,7 @@ generation_ui <- function(id) {
           column(6, plotOutput(ns("res_plot"), height = 400)),
           column(6, plotOutput(ns("demand_plot"), height = 400))
         ),
-        
+
         downloadButton(ns("download_res_plot"), "Download RES (PNG)"),
         downloadButton(ns("download_demand_plot"), "Download Demand (PNG)"),
         tags$hr(style="margin-top:60px;")
@@ -106,17 +116,351 @@ generation_ui <- function(id) {
       
       tabPanel(
         title = "Model‑Based Predictions",
+        br(),br(),
+        div(class= 'alert alert-light', h2('Predictions to 2030')),
+        # Policy Options Card
+        layout_columns(
+          col_widths = c(4, 4, 4),
+          card(
+            class = "shadow-sm border-0 rounded-3",
+            card_header(
+              class = "bg-white h5 fw-bolder p-3",
+              "Operational & Technical Reviews"
+            ),
+            card_body(
+              div(
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("downward_regulation"),
+                    "Progress an interim solution for downward regulation (negative reserve)"
+                  ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("downward_regulation"),
+                    h5(class = 'h4 fw-bold',2028)
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("downward_regulation"),
+                      autocomplete = "off"
+                    )
+                  )
+                ),
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("security_standards"),
+                    "Review of operational security standards"
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("security_standards"),
+                      autocomplete = "off"
+                    )
+                  )
+                ),
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("reduce_mustruns"),
+                    "Perform a review to reduce the number of must-run units from 3 to 2"
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("reduce_mustruns"),
+                      autocomplete = "off"
+                    )
+                  )
+                ),
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("reduce_moyle"),
+                    "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector"
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("reduce_moyle"),
+                      autocomplete = "off"
+                    )
+                  )
+                )
+              ),
+              
+              tags$script(HTML(sprintf("
+                $(document).ready(function() {
+                  ['%s', '%s', '%s', '%s'].forEach(function(checkboxId) {
+                    $('#' + checkboxId).on('change', function() {
+                      Shiny.setInputValue(checkboxId, this.checked);
+                    });
+                    Shiny.setInputValue(checkboxId, $('#' + checkboxId).prop('checked'));
+                  });
+                });
+              ", ns("downward_regulation"), ns("security_standards"), 
+                 ns("reduce_mustruns"), ns("reduce_moyle"))))
+            )
+          ),
+          card(
+            class = "shadow-sm border-0 rounded-3",
+            card_header(
+              class = "bg-white h5 fw-bolder p-3",
+              "Infrastructure & Services"
+            ),
+            card_body(
+              div(
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("phase1_lcis"),
+                    "Monitor the delivery of the Phase I Low Carbon Inertia Services"
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("phase1_lcis"),
+                      autocomplete = "off"
+                    )
+                  )
+                ),
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("phase2_lcis"),
+                    "Commence procurement process of Phase II Low Carbon Inertia Services"
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("phase2_lcis"),
+                      autocomplete = "off"
+                    )
+                  )
+                ),
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("ldes"),
+                    "SONI to coordinate with the Utility Regulator to create a credible for a procurement mechanism to procure enhanced system flexibility through Long Duration Energy Storage"
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("ldes"),
+                      autocomplete = "off"
+                    )
+                  )
+                ),
+                div(
+                  class = "input-group mb-2",
+                  tags$label(
+                    class = "form-control",
+                    `for` = ns("sn_interconnector"),
+                    "Construction of the second North-South Interconnector"
+                  ),
+                  div(
+                    class = "input-group-text",
+                    tags$input(
+                      type = "checkbox",
+                      class = "form-check-input mt-0",
+                      id = ns("sn_interconnector"),
+                      autocomplete = "off"
+                    )
+                  )
+                )
+              ),
+              tags$script(HTML(sprintf("
+                $(document).ready(function() {
+                  ['%s', '%s', '%s', '%s'].forEach(function(checkboxId) {
+                    $('#' + checkboxId).on('change', function() {
+                      Shiny.setInputValue(checkboxId, this.checked);
+                    });
+                    Shiny.setInputValue(checkboxId, $('#' + checkboxId).prop('checked'));
+                  });
+                });
+              ", ns("phase1_lcis"), ns("phase2_lcis"), 
+                 ns("ldes"), ns("sn_interconnector"))))
+            )
+          ),
+          card(
+            class = "shadow-sm border-0 rounded-3",
+            card_header(
+              class = "bg-white  h5 fw-bolder p-3",
+              "Scenario Configuration"
+            ),
+            card_body(class = 'p-3',
+              tags$label("Select Scenario for renewables:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
+              div(
+                class = "btn-group ",
+                role = "group",
+                `aria-label` = "Scenario selection",
+                tags$input(
+                  type = "radio",
+                  class = "btn-check shiny-input-radiogroup",
+                  name = ns("scenario_choice"),
+                  id = ns("scenario_worst"),
+                  value = "worst",
+                  autocomplete = "off"
+                ),
+                tags$label(
+                  class = "btn btn-danger opacity-75",
+                  `for` = ns("scenario_worst"),
+                  "Pessimistic case"
+                ),
+                tags$input(
+                  type = "radio",
+                  class = "btn-check shiny-input-radiogroup",
+                  name = ns("scenario_choice"),
+                  id = ns("scenario_medium"),
+                  value = "medium",
+                  checked = "checked",
+                  autocomplete = "off"
+                ),
+                tags$label(
+                  class = "btn btn-warning opacity-75",
+                  `for` = ns("scenario_medium"),
+                  "Medium case"
+                ),
+   
+                tags$input(
+                  type = "radio",
+                  class = "btn-check shiny-input-radiogroup",
+                  name = ns("scenario_choice"),
+                  id = ns("scenario_best"),
+                  value = "best",
+                  autocomplete = "off"
+                ),
+                tags$label(
+                  class = "btn btn-success opacity-75",
+                  `for` = ns("scenario_best"),
+                  "Optimum case"
+                )
+              ),
+              tags$script(HTML(sprintf("
+                $(document).ready(function() {
+                  var radioName = '%s';
+                  $('input[name=\"' + radioName + '\"]').on('change', function() {
+                    if (this.checked) {
+                      Shiny.setInputValue(radioName, this.value);
+                    }
+                  });
+                  // Set initial value
+                  var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
+                  if (checkedRadio.length > 0) {
+                    Shiny.setInputValue(radioName, checkedRadio.val());
+                  }
+                });
+              ", ns("scenario_choice"))))
+            )
+          )
+        ),
+        
+        br(), br(),
+        h5("Selected Forecast Combined Series (MWh)"),
+        br(),br(),
+        # DTOutput(ns("combined_forecast_table_ci_dt")),
+          
+        div(class='',
+            div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_generated_renewable'))),
+        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_available_renewable'))),
+        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_percentage_renewable')))
+        ),
+        div(div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_flow'))),
+        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_dispatch_down')))),
+        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_so_what'))),
+        
+        card(
+          class = "shadow-sm border-0 rounded-3",
+          card_body(#class='p-5 m-5',
+           DTOutput(ns("yearly_sums_table_dt"))
+          )
+        ),
+        
+        # KPIs and Forecast Data Card
+        # card(
+        #   class = "shadow-sm border-0 rounded-3",
+        #   card_header(
+        #     class = "bg-white",
+        #     "Key Performance Indicators"
+        #   ),
+        #   card_body(
+        #     tableOutput(ns("selected_date_kpis"))
+        #   )
+        # ),
+
+        
+        
+        
+    
+        # card(
+        #   class = "shadow-sm border-0 rounded-3",
+        #   card_header(
+        #     class = "bg-white",
+        #     "Selected Series Combined Forecast Table (MWh)"
+        #   ),
+        #   card_body(
+        #     tableOutput(ns("combined_forecast_table_ci")),
+        #     downloadButton(ns("download_combined_forecast_ci"),
+        #                   "Download Selected Series Forecast (CSV)",
+        #                   class = "btn-primary mt-2")
+        #   )
+        # ),
+        
+    
+      ),
         
 #-------model-based predictions
-        h2("Model-Based Predictions", style = "color:#355070; margin-bottom:40px;"),
-        h3("Forecast Plots"),
-        uiOutput(ns("all_forecast_plots")),
-        tags$hr(),
-        h3("XGBoost Forecast Table"),
+        card(
+          class = "shadow-sm border-0 rounded-3",
+          card_header(
+            class = "bg-white",
+            tags$h4("Model-Based Predictions", class = "mb-0")
+          ),
+          card_body(
+            h5("Forecast Plots"),
+            uiOutput(ns("all_forecast_plots"))
+          )
+        ),
         
+        card(
+          class = "shadow-sm border-0 rounded-3",
+          card_header(
+            class = "bg-white",
+            "XGBoost Forecast Table"
+          ),
+          card_body(
 #-------table based on predicted values
-        tableOutput(ns("combined_forecast_table")),
-        downloadButton(ns("download_combined_forecast"), "Download XGBoost Forecast (CSV)"),
+            tableOutput(ns("combined_forecast_table")),
+            downloadButton(ns("download_combined_forecast"), 
+                          "Download XGBoost Forecast (CSV)",
+                          class = "btn-primary mt-2")
+          )
+        ),
         
         # h3("Combined Forecast Table_Linear"),
         # tableOutput(ns("combined_forecast_table_lm")),
@@ -184,74 +528,7 @@ generation_ui <- function(id) {
         plotOutput(ns("dd_history_plot"), height = "350px"),
         tags$hr(),
 
-        radioButtons(
-          inputId = ns("scenario_choice"),
-          label = "Scenario:",
-          choices = c(
-            "Medium case" = "medium",
-            "The worst case" = "worst",
-            "Optimum case" = "best"
-          ),
-          selected = "medium",
-          inline = TRUE
-        ),
-
-        checkboxInput(
-          inputId = ns("downward_regulation"),
-          label = "Progress an interim solution for downward regulation (negative reserve)",
-          value = FALSE
-        ),
-
-        checkboxInput(
-          inputId = ns("security_standards"),
-          label = "Review of operational security standards",
-          value = FALSE
-        ),
-
-        checkboxInput(
-          inputId = ns("reduce_mustruns"),
-          label = "Perform a review to reduce the number of must-run units from 3 to 2",
-          value = FALSE
-        ),
-
-        checkboxInput(
-          inputId = ns("phase1_lcis"),
-          label = "Monitor the delivery of the Phase I Low Carbon Inertia Services",
-          value = FALSE
-        ),
-        
-        checkboxInput(
-          inputId = ns("phase2_lcis"),
-          label = "Commence procurement process of Phase II Low Carbon Inertia Services",
-          value = FALSE
-        ),
-        
-        checkboxInput(
-          inputId = ns("reduce_moyle"),
-          label = "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector",
-          value = FALSE
-        ),
-
-        checkboxInput(
-          inputId = ns("ldes"),
-          label = "SONI to coordinate with the Utility Regulator to create a credible for a procurement mechanism to procure enhanced system flexibility through Long Duration Energy Storage",
-          value = FALSE
-        ),
-        
-        checkboxInput(
-          inputId = ns("sn_interconnector"),
-          label = "Construction of the second North-South Interconnector",
-          value = FALSE
-        ),
-
-        tableOutput(ns("selected_date_kpis")),
-        
-        h4("Selected Series Combined Forecast Table (MWh)"),
-        tableOutput(ns("combined_forecast_table_ci")),
-        downloadButton(ns("download_combined_forecast_ci"),
-                       "Download Selected Series Forecast (CSV)"),
-        tableOutput(ns("yearly_sums_table")),
-        )
+  
       )
     ) 
 }
@@ -943,7 +1220,6 @@ generation_server <- function(id, state) {
         
         value_col <- pick_fc_col(df, choices[[varname]])
         
-        
         df %>%
           dplyr::select(date, !!rlang::sym(value_col)) %>%
           dplyr::rename(!!varname := !!rlang::sym(value_col))
@@ -951,6 +1227,7 @@ generation_server <- function(id, state) {
 
       df_all <- Reduce(function(x, y) full_join(x, y, by = "date"), tables) %>%
         arrange(date)
+
       #apply scenarios
       scenario <- input$scenario_choice
       
@@ -1011,6 +1288,7 @@ generation_server <- function(id, state) {
             mutate(sum_demand = dplyr::coalesce(lo95_demand, sum_demand))
         }
       }
+      
       #apply policies
       df_all <- df_all %>%
         mutate(`Generated RES` = sum_wind + sum_solar)
@@ -1116,6 +1394,120 @@ generation_server <- function(id, state) {
     })
     
     
+    output$combined_forecast_table_ci_plot_flow <- renderEcharts4r({
+    dt <- combined_forecast_ci()
+    print(names(dt))
+    
+    dt %>% 
+      mutate(exports = -1* Exports) %>% 
+      e_charts(date) %>% 
+      e_bar(Imports,color='cornflowerblue', stack = 'f',emphasis = list(focus= 'series')) %>% 
+      e_line(Imports,color='cornflowerblue') %>% 
+      e_bar(exports,color='red', stack = 'f',emphasis = list(focus= 'series')) %>% 
+      e_line(exports,color='red') %>% 
+      e_tooltip() %>%      
+      e_theme('walden')
+    })
+    
+    output$combined_forecast_table_ci_plot_generated_renewable <- renderEcharts4r({
+      dt <- combined_forecast_ci()
+      
+      dt %>% 
+        mutate(exports = -1* Exports) %>% 
+        e_charts(date) %>% 
+        e_area(`Generated Solar`, stack = 'f', color='cornflowerblue', emphasis = list(focus= 'series')) %>% 
+        e_area(`Generated Wind`, stack = 'f', color='yellow',emphasis = list(focus= 'series')) %>% 
+        e_line(`Generated RES`, color='grey',emphasis = list(focus= 'series')) %>% 
+        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        e_theme('walden')
+    })
+    
+    output$combined_forecast_table_ci_plot_available_renewable <- renderEcharts4r({
+      dt <- combined_forecast_ci()
+      
+      dt %>% 
+        mutate(exports = -1* Exports) %>% 
+        e_charts(date) %>% 
+        e_area(`Available Solar`, stack = 'f', color='cornflowerblue') %>% 
+        e_area(`Available Wind`, stack = 'f', color='yellow') %>% 
+        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        e_theme('walden')
+    })
+    
+    output$combined_forecast_table_ci_plot_percentage_renewable <- renderEcharts4r({
+      dt <- combined_forecast_ci()
+      # data.frame(x=1,y=1) %>%
+      #   e_charts(x) %>%
+      #   e_scatter(y)
+      dt %>%
+        mutate(
+          perc_solar = `Generated Solar` / `Available Solar`*100,
+          perc_wind =` Generated Wind` / `Available Wind`*100) %>%
+        e_charts(date) %>%
+        e_line(perc_solar,  color='#FFDE21', name = 'Availability of Solar', emphasis = list(focus= 'series')) %>%  # #FFDE21
+        e_line(perc_wind,  color='cornflowerblue',name = 'Availability of Wind', emphasis = list(focus= 'series')) %>%
+        e_format_y_axis(suffix='%') %>%
+        e_mark_line(data = list(name= 'Theoretical Max',
+                                yAxis= 100),
+                    lineStyle = list(type='solid', color='grey')) %>% 
+        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        e_theme('walden')
+        
+    })
+    
+    output$combined_forecast_table_ci_plot_dispatch_down <- renderEcharts4r({
+      dt <- combined_forecast_ci()
+      # data.frame(x=1,y=1) %>% 
+      #   e_charts(x) %>% 
+      #   e_scatter(y)
+      
+      dt %>%
+      e_charts(date) %>%
+      e_bar(`Dispatch Down Wind`,color='salmon', stack = 'f', name = 'Dispatch Down Wind') %>%
+      # e_line(Dispatch.Down.Wind,color='salmon', stack = 'h') %>%
+      e_bar(`Dispatch Down Solar`,color='firebrick', stack = 'f', name = 'Dispatch Down Solar') %>%
+      # e_line(Dispatch.Down.Solar,color='lightcoral', stack = 'h') %>%
+      e_x_axis(type='time') %>%
+      # e_loess(formula = Dispatch.Down.Solar~date,color='black') %>%
+      e_tooltip() %>%
+      e_theme('walden')
+    
+    })
+    
+    output$combined_forecast_table_ci_plot_so_what <- renderEcharts4r({
+      dt <- combined_forecast_ci()
+      
+      dt %>% 
+
+        e_charts(date) %>%
+        e_line(Target,endLabel = list(show = T),emphasis = list(focus='series')) %>% # formatter = '{a}'  # #FFDE21
+        e_line(SNSP,itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        e_line(`Planned SNSP`, lineStyle = list(type='dashed'), itemStyle = list(opacity=0),emphasis = list(focus='series')) %>%  # #FFDE21
+        e_line(Curtailment, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        e_line(Constraint, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        e_x_axis(type = 'time' ,max = "2031-12-01") %>%
+   
+        e_color(c('black','red', 'lightcoral',  'royalblue', 'steelblue')) %>%
+        e_annotations(default_color = 'grey',
+                      legend = F,
+                      name = 'Target',
+                      list(list(
+                        lineStyle = "none",
+                        # rectStyle = "none",
+                        arrowStyle = "none",
+                        x = '2030-02-01',
+                        y = 0.4,
+                        text = "RES/Demand<br>Target",
+                        offsetX = 80,
+                        offsetY = 0
+                      )) ) %>%
+        e_grid(right='10%') %>%
+        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        e_theme('walden') %>% 
+        e_y_axis( formatter = e_axis_formatter(style = 'percent'))
+    })
+    
+    
     output$combined_forecast_table_ci <- renderTable({
       combined_forecast_ci()
     }, digits = 3, rownames = FALSE)
@@ -1162,6 +1554,103 @@ generation_server <- function(id, state) {
         check.names = FALSE, stringsAsFactors = FALSE
       )
     }, digits = 3, rownames = FALSE)
+    
+    
+    output$yearly_sums_table_dt <- renderDT({
+      print('combined_forecast_ci()')
+      print(combined_forecast_ci())
+      print('----------------------')
+      
+      df <- combined_forecast_ci()
+      
+      df$date <- as.Date(df$date)
+      
+      df$year <- format(df$date, "%Y")
+      
+      num_cols <- sapply(df, is.numeric)
+      
+      yearly_df <- df %>%
+        group_by(year) %>%
+        summarise(across(which(num_cols), mean, na.rm = TRUE)) %>%
+        
+        mutate(
+          Target = `Generated RES` / `Demand`,
+          SNSP   = (`Generated RES` + `Imports`) /
+            (`Demand` + `Exports`)
+        ) %>%
+        
+        mutate(
+          `Planned SNSP` = case_when(
+            year >= 2025 & year <= 2027 ~ 0.80,
+            year >= 2028 & year <= 2029 ~ 0.85,
+            year == 2030               ~ 0.90,
+            TRUE                       ~ NA_real_
+          )
+        ) %>%
+        mutate(.dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+               
+               Curtailment = if_else(
+                 .dd_total > 0,
+                 (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
+                 NA_real_
+               ),
+               Constraint = if_else(
+                 .dd_total > 0,
+                 (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
+                 NA_real_
+               ),
+               
+               `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))
+      # page_fluid(
+      #   icon('arrow-right',class= 'visually-hidden'),
+      
+      yearly_df <- yearly_df %>% mutate(across(-c('Curtailment SNSP'), ~as.numeric(.x)))
+        
+      yearly_df %>% 
+          rowwise( ) %>% 
+          mutate(.before = 2,Flow=as.character(tagList(div(
+            div(div(class='lead',icon('arrow-left'),
+                    Imports	),
+                p(class='text-muted','Imports')),
+            div(class = 'float-right',
+                span(class='text-muted',Exports	,icon('arrow-right')),
+                p(class='text-bg-danger','Exports')
+            ),
+          )))) %>% 
+          mutate(.after = 2, Renewables=as.character(tagList(
+            h4(class='text-bg-success',icon('leaf'),round(`Generated RES`)),
+            div(class = 'text-center',
+                div(round(`Generated Solar`),'/',round(`Available Solar`), icon(class='text-yellow','sun')),
+                div(round(`Generated Wind`),'/',round(`Available Wind`), icon(class='text-blue','fan'))
+            )))) %>% 
+          mutate(
+            .after = 3,Demand=as.character(tagList(div(  
+              icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
+              icon(class= 'text-centre','industry'),icon(class= 'float-right','house'),
+              p(class='text-bg-dark',Demand)
+            )))) %>% 
+          mutate(.after = 4,year= as.character(h1(year))) %>% 
+          mutate(Target = as.character(div(style = 'width:105px;',circular_value(Target*100) ) ))%>% 
+          # mutate(.after = 5,Target = as.character(h1(Target)) )%>% 
+          mutate(gap='') %>%
+          mutate(SNSP = as.character(tags$ul(tags$li(class='text-muted','Actual / Planned SNSP'),
+                                             tags$li(paste(SNSP ,'/', `Planned SNSP`)),
+                                             tags$li( class='text-danger',paste('\u394',`Planned SNSP`-SNSP))
+          ))) %>%
+          mutate(`Dispatch Down` = as.character(div(
+            tags$ul(
+              tags$li(paste('Constraint:',Constraint)),
+              tags$li(paste('Curtailment:',Curtailment))),
+            
+            div(style = 'border-style: double', 
+                class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
+                h6(.dd_total))
+            
+          ))) %>%
+          select(Target, year, Flow, Renewables, Demand, SNSP, `Dispatch Down` ) %>%  #View()
+          DT::datatable(height = '100vh',escape = F, options = list(pageLength = 10, scrollX = TRUE))
+      #)
+    })
     
     output$yearly_sums_table <- renderTable({
       df <- combined_forecast_ci()

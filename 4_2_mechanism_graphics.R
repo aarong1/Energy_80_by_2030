@@ -317,7 +317,7 @@ offshore_wind_plot <- function( offshore_wind_date, offshore_wind_capacity, offs
     e_tooltip(trigger = "axis") |>
     e_y_axis(min = 0) |>
     e_legend(show = FALSE) |>
-    e_grid(top = "25%", bottom = "10%", left = "10%", right = "15%") |>
+    # e_grid(top = "25%", bottom = "10%", left = "10%", right = "15%") |>
     e_x_axis(max = as.character(year(end_date)),
       axisLine   = list(lineStyle = list(color = "#eee")),  # light axis line
       axisLabel  = list(color = "#ccc"),                    # light text
@@ -342,6 +342,9 @@ offshore_wind_plot <- function( offshore_wind_date, offshore_wind_capacity, offs
   # )
 
 }
+
+offshore_wind_plot( '01-01-2029', 100, T)
+  
 
 #offshore_wind_plot( offshore_wind_date, offshore_wind_capacity)
 

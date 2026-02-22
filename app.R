@@ -1166,7 +1166,7 @@ server <- function(input, output, session) {
         'tech',
         broad_status)
     
-    
+      
     splitting_criteria <- current_projects$broad_status
     
     list_statuses_original <- current_projects %>%
