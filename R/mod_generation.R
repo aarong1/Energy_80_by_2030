@@ -1,5 +1,7 @@
 
 #ui
+f <- function(p){format(big.mark=',',round(p))}
+
 generation_ui <- function(id) {
   ns <- NS(id)
   

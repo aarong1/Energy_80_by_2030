@@ -16,6 +16,14 @@ end_date = '2032-01-01'
 load('init_vars.RData')
 f <- function(p){format(big.mark=',',round(p))}
 
+# Helper function to get slider value
+getSliderValue <- function(inputValue, defaultValue) {
+  if (is.null(inputValue) || inputValue == "") {
+    return(defaultValue)
+  }
+  return(as.numeric(inputValue))
+}
+
 source('./components/circular_value.R')
 source('./components/sticky_side_bar.R')
 
@@ -1701,11 +1709,10 @@ observe({
   
   offshore_wind_target_date <- offshore_wind_df() |>
     filter(year(finished) == year(target_date)) |>
-    pull(mean)|> 
-      sum() |> 
+    pull(mean)|>
+      sum() |>
       magrittr::multiply_by(1000*12)
 
-  
   offshore_wind_end_date <- offshore_wind_df()|>
     filter(year(finished) == year(max(finished))) |>
     pull(mean)|> 
