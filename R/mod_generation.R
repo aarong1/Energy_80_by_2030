@@ -21,6 +21,7 @@ br(),br(),
         title = "Assumptions & Current Data",
         
 #-------daily and monthly SNSP (historical data)
+hr(),
 br(),br(),
         div(class= 'alert alert-light', 
             h2("Tier 1: A11 – SNSP, inertia, RoCoF & minimum conventional generation limits"#,
@@ -114,8 +115,9 @@ br(),br(),
         tags$hr(style="margin-top:60px;")
         ),
       
-      tabPanel(
+      tabPanel(class = 'p-5 m-5',
         title = "Model‑Based Predictions",
+        hr(),
         br(),br(),
         div(class= 'alert alert-light', h2('Predictions to 2030')),
         # Policy Options Card
@@ -307,6 +309,65 @@ br(),br(),
                  ns("ldes"), ns("sn_interconnector"))))
             )
           ),
+          div(  
+            card(
+            class = "shadow-sm border-0 rounded-3",
+            card_header(
+              class = "bg-white h5 fw-bolder p-3",
+              "Source of Renewable Simulation"
+            ),
+            card_body(class = 'p-3',
+                      tags$label("Select Source of Renewable Simulation:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
+                      div(
+                        class = "btn-group ",
+                        role = "group",
+                        `aria-label` = "Scenario selection",
+                        tags$input(
+                          type = "radio",
+                          class = "btn-check shiny-input-radiogroup",
+                          name = ns("scenario_input_choice"),
+                          id = ns("policy_simulation"),
+                          value = "worst",
+                          autocomplete = "off"
+                        ),
+                        tags$label(
+                          class = "btn btn-outline-primary opacity-75",
+                          `for` = ns("policy_simulation"),
+                          "REPD projection using Policy simulation"
+                        ),
+                        tags$input(
+                          type = "radio",
+                          class = "btn-check shiny-input-radiogroup",
+                          name = ns("scenario_input_choice"),
+                          id = ns("forecasts"),
+                          value = "forecasts",
+                          checked = "checked",
+                          autocomplete = "off"
+                        ),
+                        tags$label(
+                          class = "btn btn-outline-primary opacity-75",
+                          `for` = ns("forecasts"),
+                          "Forecasts"
+                        )
+                      )
+                      ),
+                      tags$script(HTML(sprintf("
+                $(document).ready(function() {
+                  var radioName = '%s';
+                  $('input[name=\"' + radioName + '\"]').on('change', function() {
+                    if (this.checked) {
+                      Shiny.setInputValue(radioName, this.value);
+                    }
+                  });
+                  // Set initial value
+                  var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
+                  if (checkedRadio.length > 0) {
+                    Shiny.setInputValue(radioName, checkedRadio.val());
+                  }
+                });
+              ", ns("scenario_input_choice"))))
+            
+          ),
           card(
             class = "shadow-sm border-0 rounded-3",
             card_header(
@@ -328,7 +389,7 @@ br(),br(),
                   autocomplete = "off"
                 ),
                 tags$label(
-                  class = "btn btn-danger opacity-75",
+                  class = "btn btn-outline-danger opacity-75",
                   `for` = ns("scenario_worst"),
                   "Pessimistic case"
                 ),
@@ -342,7 +403,7 @@ br(),br(),
                   autocomplete = "off"
                 ),
                 tags$label(
-                  class = "btn btn-warning opacity-75",
+                  class = "btn btn-outline-warning opacity-75",
                   `for` = ns("scenario_medium"),
                   "Medium case"
                 ),
@@ -356,7 +417,7 @@ br(),br(),
                   autocomplete = "off"
                 ),
                 tags$label(
-                  class = "btn btn-success opacity-75",
+                  class = "btn btn-outline-success opacity-75",
                   `for` = ns("scenario_best"),
                   "Optimum case"
                 )
@@ -378,28 +439,48 @@ br(),br(),
               ", ns("scenario_choice"))))
             )
           )
+        )
         ),
         
         br(), br(),
         h5("Selected Forecast Combined Series (MWh)"),
         br(),br(),
         # DTOutput(ns("combined_forecast_table_ci_dt")),
+          div(class='d-flex ',
+        div( class="container",
+        div( class="row",
           
-        div(class='',
-            div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_generated_renewable'))),
-        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_available_renewable'))),
-        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_percentage_renewable')))
+          div(class="col-3",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_generated_renewable'))),
+          div(class="col-3",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_available_renewable'))),
+          div(class="col-3",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_percentage_renewable')))
         ),
-        div(div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_flow'))),
-        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_dispatch_down')))),
-        div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_so_what'))),
-        
-        card(
-          class = "shadow-sm border-0 rounded-3",
-          card_body(#class='p-5 m-5',
-           DTOutput(ns("yearly_sums_table_dt"))
+        div(class="row",
+          div(class="col-5",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_flow'))),
+          div(class="col-5",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_dispatch_down')))
           )
         ),
+        div(class="row",
+            div(class="col-10",
+                div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_so_what')))
+                )),
+        div(sticky_side_bar())
+          ),
+        # sticky_side_bar(),
+        
+        
+        # card(
+        #   class = "shadow-sm border-0 rounded-3 p-5 m-5",
+        #   card_body(#class='',
+        #    DTOutput(ns("yearly_sums_table_dt"))
+        #   )
+        # ),
+        
+        div(
+        class = "shadow-sm border-0 rounded-3 p-5 m-5",
+        div(#class='',
+          DTOutput(ns("yearly_sums_table_dt"))
+        )
+      ),
         
         # KPIs and Forecast Data Card
         # card(
@@ -1405,8 +1486,9 @@ generation_server <- function(id, state) {
       e_line(Imports,color='cornflowerblue') %>% 
       e_bar(exports,color='red', stack = 'f',emphasis = list(focus= 'series')) %>% 
       e_line(exports,color='red') %>% 
-      e_tooltip() %>%      
-      e_theme('walden')
+      e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>%      
+      e_theme('walden') %>% 
+      e_title('Imports and Exports')
     })
     
     output$combined_forecast_table_ci_plot_generated_renewable <- renderEcharts4r({
@@ -1418,8 +1500,10 @@ generation_server <- function(id, state) {
         e_area(`Generated Solar`, stack = 'f', color='cornflowerblue', emphasis = list(focus= 'series')) %>% 
         e_area(`Generated Wind`, stack = 'f', color='yellow',emphasis = list(focus= 'series')) %>% 
         e_line(`Generated RES`, color='grey',emphasis = list(focus= 'series')) %>% 
-        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
-        e_theme('walden')
+        e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
+        e_y_axis(name = 'MWh') %>%
+        e_theme('walden') %>% 
+        e_title('Generation')
     })
     
     output$combined_forecast_table_ci_plot_available_renewable <- renderEcharts4r({
@@ -1428,10 +1512,12 @@ generation_server <- function(id, state) {
       dt %>% 
         mutate(exports = -1* Exports) %>% 
         e_charts(date) %>% 
-        e_area(`Available Solar`, stack = 'f', color='cornflowerblue') %>% 
-        e_area(`Available Wind`, stack = 'f', color='yellow') %>% 
-        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
-        e_theme('walden')
+        e_area(`Available Solar`, stack = 'f', color='cornflowerblue',emphasis = list(focus= 'series')) %>% 
+        e_area(`Available Wind`, stack = 'f', color='yellow',emphasis = list(focus= 'series')) %>% 
+        e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
+        e_y_axis(label = 'MWh') %>%
+        e_theme('walden') %>% 
+        e_title('Available')
     })
     
     output$combined_forecast_table_ci_plot_percentage_renewable <- renderEcharts4r({
@@ -1442,7 +1528,7 @@ generation_server <- function(id, state) {
       dt %>%
         mutate(
           perc_solar = `Generated Solar` / `Available Solar`*100,
-          perc_wind =` Generated Wind` / `Available Wind`*100) %>%
+          perc_wind = `Generated Wind` / `Available Wind`*100) %>%
         e_charts(date) %>%
         e_line(perc_solar,  color='#FFDE21', name = 'Availability of Solar', emphasis = list(focus= 'series')) %>%  # #FFDE21
         e_line(perc_wind,  color='cornflowerblue',name = 'Availability of Wind', emphasis = list(focus= 'series')) %>%
@@ -1450,8 +1536,10 @@ generation_server <- function(id, state) {
         e_mark_line(data = list(name= 'Theoretical Max',
                                 yAxis= 100),
                     lineStyle = list(type='solid', color='grey')) %>% 
-        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
-        e_theme('walden')
+        e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
+        e_x_axis(label = 'Time', type='time') %>%
+        e_theme('walden') %>% 
+        e_title('Constraint and Curtailment', 'Availability - Generation')
         
     })
     
@@ -1463,14 +1551,15 @@ generation_server <- function(id, state) {
       
       dt %>%
       e_charts(date) %>%
-      e_bar(`Dispatch Down Wind`,color='salmon', stack = 'f', name = 'Dispatch Down Wind') %>%
+      e_bar(`Dispatch Down Wind`,color='salmon', stack = 'f', name = 'Dispatch Down Wind',emphasis = list(focus= 'series')) %>%
       # e_line(Dispatch.Down.Wind,color='salmon', stack = 'h') %>%
-      e_bar(`Dispatch Down Solar`,color='firebrick', stack = 'f', name = 'Dispatch Down Solar') %>%
+      e_bar(`Dispatch Down Solar`,color='firebrick', stack = 'f', name = 'Dispatch Down Solar',emphasis = list(focus= 'series')) %>%
       # e_line(Dispatch.Down.Solar,color='lightcoral', stack = 'h') %>%
-      e_x_axis(type='time') %>%
+      e_x_axis(name = 'Time', type='time') %>%
       # e_loess(formula = Dispatch.Down.Solar~date,color='black') %>%
-      e_tooltip() %>%
-      e_theme('walden')
+        e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
+        e_theme('walden') %>% 
+        e_title('Dispatch Down')
     
     })
     
@@ -1480,12 +1569,12 @@ generation_server <- function(id, state) {
       dt %>% 
 
         e_charts(date) %>%
-        e_line(Target,endLabel = list(show = T),emphasis = list(focus='series')) %>% # formatter = '{a}'  # #FFDE21
+        e_line(Target,endLabel = list(show = F),emphasis = list(focus='series')) %>% # formatter = '{a}'  # #FFDE21
         e_line(SNSP,itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
         e_line(`Planned SNSP`, lineStyle = list(type='dashed'), itemStyle = list(opacity=0),emphasis = list(focus='series')) %>%  # #FFDE21
         e_line(Curtailment, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
         e_line(Constraint, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
-        e_x_axis(type = 'time' ,max = "2031-12-01") %>%
+        e_x_axis(type = 'time' ,max = "2030-12-01") %>%
    
         e_color(c('black','red', 'lightcoral',  'royalblue', 'steelblue')) %>%
         e_annotations(default_color = 'grey',
@@ -1496,15 +1585,16 @@ generation_server <- function(id, state) {
                         # rectStyle = "none",
                         arrowStyle = "none",
                         x = '2030-02-01',
-                        y = 0.4,
+                        y = last(dt$Target),
                         text = "RES/Demand<br>Target",
                         offsetX = 80,
                         offsetY = 0
                       )) ) %>%
         e_grid(right='10%') %>%
-        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        e_tooltip() %>% 
         e_theme('walden') %>% 
-        e_y_axis( formatter = e_axis_formatter(style = 'percent'))
+        e_y_axis( formatter = e_axis_formatter(style = 'percent')) %>% 
+        e_title('RES Target with SNSP, DD, Curatilment and Constraint Trajectory', 'Dashed line = Planned SNSP')
     })
     
     
@@ -1604,51 +1694,61 @@ generation_server <- function(id, state) {
       # page_fluid(
       #   icon('arrow-right',class= 'visually-hidden'),
       
-      yearly_df <- yearly_df %>% mutate(across(-c('Curtailment SNSP'), ~as.numeric(.x)))
+      # yearly_df <- yearly_df %>% 
+      #   mutate(across(-c('Curtailment SNSP','year'),
+      #                 ~as.numeric(round(.x))))
         
       yearly_df %>% 
           rowwise( ) %>% 
-          mutate(.before = 2,Flow=as.character(tagList(div(
+          mutate(.before = 2,Flow=as.character(tagList(div(style = 'min-width:100px;',class= 'm-1 p-1',
             div(div(class='lead',icon('arrow-left'),
-                    Imports	),
-                p(class='text-muted','Imports')),
+                    f(Imports)	),
+                p(class='text-muted text-bg-info p-1 m-1 rounded-2','Imports')),
             div(class = 'float-right',
-                span(class='text-muted',Exports	,icon('arrow-right')),
-                p(class='text-bg-danger','Exports')
+                span(class='text-muted',f(Exports)	,icon('arrow-right')),
+                p(class='text-bg-danger p-1 m-1 rounded-2','Exports')
             ),
           )))) %>% 
-          mutate(.after = 2, Renewables=as.character(tagList(
-            h4(class='text-bg-success',icon('leaf'),round(`Generated RES`)),
+          mutate(.after = 2, Renewables=as.character(tagList(div(
+            h4(class='text-bg-success p-1 m-1 rounded-2',icon('leaf'),f(`Generated RES`)),
             div(class = 'text-center',
-                div(round(`Generated Solar`),'/',round(`Available Solar`), icon(class='text-yellow','sun')),
-                div(round(`Generated Wind`),'/',round(`Available Wind`), icon(class='text-blue','fan'))
-            )))) %>% 
+                div(f(`Generated Solar`),'/',f(`Available Solar`), icon(class='text-yellow','sun')),
+                div(f(`Generated Wind`),'/',f(`Available Wind`), icon(class='text-blue','fan'))
+            ))))) %>% 
           mutate(
-            .after = 3,Demand=as.character(tagList(div(  
+            .after = 3,Demand=as.character(tagList(div( class= 'm-1 p-1', 
               icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
-              icon(class= 'text-centre','industry'),icon(class= 'float-right','house'),
-              p(class='text-bg-dark',Demand)
+              icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
+              p(class='text-bg-dark p-1 rounded-2 m-1' ,' MW ' ,f(Demand), 
+              icon(class= 'text-centre','industry'),
+              icon(class= '','house')
+)
             )))) %>% 
           mutate(.after = 4,year= as.character(h1(year))) %>% 
-          mutate(Target = as.character(div(style = 'width:105px;',circular_value(Target*100) ) ))%>% 
+          mutate(Target = as.character(div(style = 'width:105px;',circular_value(f(Target*100)) ) ))%>% 
           # mutate(.after = 5,Target = as.character(h1(Target)) )%>% 
           mutate(gap='') %>%
-          mutate(SNSP = as.character(tags$ul(tags$li(class='text-muted','Actual / Planned SNSP'),
-                                             tags$li(paste(SNSP ,'/', `Planned SNSP`)),
-                                             tags$li( class='text-danger',paste('\u394',`Planned SNSP`-SNSP))
-          ))) %>%
-          mutate(`Dispatch Down` = as.character(div(
+          mutate(SNSP = as.character(div(class= 'm-1 p-1',tags$ul(tags$li(class='text-muted','Actual / Planned SNSP'),
+                                             tags$li(paste(format(SNSP,digits=2) ,'/', format(`Planned SNSP`,digits=2) )),
+                                             tags$li( class='text-danger',paste('\u394',format(`Planned SNSP`-SNSP,digits=2) ))
+          )))) %>%
+          mutate(`Dispatch Down` = as.character(div(class= 'm-1 p-1',
             tags$ul(
-              tags$li(paste('Constraint:',Constraint)),
-              tags$li(paste('Curtailment:',Curtailment))),
+              tags$li(paste('Constraint:',format(Constraint,digits=2) )),
+              tags$li(paste('Curtailment:',format(Curtailment,digits=2) ))),
             
             div(style = 'border-style: double', 
                 class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
-                h6(.dd_total))
+                h5(class = 'fw-bold','MW',f(.dd_total)))
             
           ))) %>%
-          select(Target, year, Flow, Renewables, Demand, SNSP, `Dispatch Down` ) %>%  #View()
-          DT::datatable(height = '100vh',escape = F, options = list(pageLength = 10, scrollX = TRUE))
+          select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
+          DT::datatable(height = '100vh',
+                        escape = F, 
+                        
+                        rownames=F,
+                        selection='none',
+                        options = list(dom = '',ordering = FALSE,pageLength = 10, scrollX = TRUE))
       #)
     })
     

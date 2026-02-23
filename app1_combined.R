@@ -14,6 +14,8 @@ target_date = '2030-01-01'
 end_date = '2032-01-01'
 
 load('init_vars.RData')
+f <- function(p){format(big.mark=',',round(p))}
+source('./components/circular_value.R')
 
 mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
                               to = as.Date(end_date),
@@ -103,6 +105,11 @@ ui <- navbarPage(
     ")),
     
     tags$style(HTML("
+    td {
+    border-color: white;
+    border-style: solid;
+    border-width: 2px;
+}
       .back-bar { position: sticky; top: 0; z-index: 10; background: #fff; padding: 8px 0; }
       .centered-content { text-align: center; }
       #diagram svg { display: block; margin: 0 auto; max-width: 90%; height: auto; }
