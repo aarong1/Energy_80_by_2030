@@ -1,5 +1,4 @@
-# app.R
-
+# Combined Energy Planning Dashboard
 library(shiny)
 library(bslib)
 library(tidyverse)
@@ -9,44 +8,65 @@ library(memoise)
 library(digest)
 library(echarts4r)
 
+# Load renewable simulation sources
 options(shiny.devmode = TRUE)
-
 target_date = '2030-01-01'
 end_date = '2032-01-01'
 
 load('init_vars.RData')
+f <- function(p){format(big.mark=',',round(p))}
+
+# Helper function to get slider value
+getSliderValue <- function(inputValue, defaultValue) {
+  if (is.null(inputValue) || inputValue == "") {
+    return(defaultValue)
+  }
+  return(as.numeric(inputValue))
+}
+
+source('./components/circular_value.R')
+source('./components/sticky_side_bar.R')
 
 mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
                               to = as.Date(end_date),
                               by = 1 ), 'month')
 )
-  
+
 source('1_pipeline_state.R')
 source('2_project_progression.R')
 source('3_forecast_projects.R')
 source('4_0_mechanism_utils.R')
 source('4_2_mechanism_graphics.R')
-#source('4_3_mechanism_outputs.R')
-
 
 # Set up for async processing
 plan(multisession)
-ui <- page_fluid(
 
+# Load energy flow diagram modules
+source("./preprocess/params.R")
+source("./preprocess/functions.R")
+source("./R/mod_diagram.R")
+source("./R/mod_generation.R")
+source("./R/mod_transmission.R")
+source("./R/mod_distribution.R")
+source("./R/mod_supply.R")
+
+# Load renewable simulation module
+# source("./modules/renewable_mod.R")
+
+#ui
+ui <- navbarPage(
+  title = "Energy Planning Dashboard",
   theme = bs_theme(version = 5, 
                    bootswatch = 'lumen',
                    primary = '#2196F3',
-                   success = 'rgb(140,233,106)'
-                   ), #'#B2FF59'),
-  
-  # startup_overlay_div(),
+                   success = 'rgb(140,233,106)'),
 
-  # Add ion range slider CSS and JS plus Font Awesome and MathJax
-  tags$head(
-    # External CDN resources
+  id = "main_nav",
+  
+  header = tags$head(
+    # External CDN resources for renewable simulation
     tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"),
     tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
-    # tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"),
     tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"),
     tags$script(src = "https://polyfill.io/v3/polyfill.min.js?features=es6"),
     tags$script(id = "MathJax-script", async = TRUE, src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"),
@@ -62,6 +82,76 @@ ui <- page_fluid(
     tags$script(src = "js/input_date_handlers.js"),
     
     tags$script(HTML("
+      Shiny.addCustomMessageHandler('toggleLoadingBtn', function(state) {
+        if (state === 'show') {
+          $('#loading').show();
+        } else {
+          $('#loading').hide();
+        }
+      });
+      
+      // Initialize Bootstrap tooltips
+      $(document).ready(function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle=\"tooltip\"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      });
+      
+      // Energy flow diagram click handler
+      document.addEventListener('click', function(ev) {
+        var host = document.getElementById('diagram-diagram');
+        var anchor = ev.target.closest && ev.target.closest('a');
+        if (!host || !anchor || !host.contains(anchor)) return;
+
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        var href = anchor.getAttribute('xlink:href') || anchor.getAttribute('href') || '';
+        var idx = href.indexOf('#');
+        var frag = (idx >= 0) ? href.substring(idx + 1) : '';
+        if (frag) Shiny.setInputValue('diagram_click', frag, {priority: 'event'});
+      }, true);
+    ")),
+    
+    tags$style(HTML("
+    td {
+    border-color: white;
+    border-style: solid;
+    border-width: 2px;
+}
+      .back-bar { position: sticky; top: 0; z-index: 10; background: #fff; padding: 8px 0; }
+      .centered-content { text-align: center; }
+      #diagram svg { display: block; margin: 0 auto; max-width: 90%; height: auto; }
+      .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
+    "))
+  ),
+  
+  # Tab 1: Renewable Energy Simulation (from app.R)
+  tabPanel("Renewable Simulation",
+    icon = icon("solar-panel"),
+    value = "renewable_tab",
+    
+    tags$head(
+      # External CDN resources
+      tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"),
+      tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
+      # tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"),
+      tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"),
+      tags$script(src = "https://polyfill.io/v3/polyfill.min.js?features=es6"),
+      tags$script(id = "MathJax-script", async = TRUE, src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"),
+      
+      # Local custom files
+      tags$link(rel = "stylesheet", href = "styles/energy-app.css"),
+      tags$script(src = "js/mathjax-config.js"),
+      tags$script(src = "js/scrollspy.js"),
+      tags$script(src = "js/ion-slider-init.js"),
+      tags$script(src = "js/slider-config.js"),
+      tags$script(src = "js/progress-handlers.js"),
+      tags$script(src = "js/radio-handlers.js"),
+      tags$script(src = "js/input_date_handlers.js"),
+      
+      tags$script(HTML("
       Shiny.addCustomMessageHandler('toggleLoadingBtn', function(state) {
 
         if (state === 'show') {
@@ -79,660 +169,728 @@ ui <- page_fluid(
         });
       });
     "))
-    
-  ),
-
-  # Navigation bar - simplified with text only
-  tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 fixed-top", #  bg-white
-           `data-bs-theme` = "light",
-    div(class = "container-fluid d-inline",
-      tags$a(class = "navbar-brand fw-bold d-inline", href = "#top",
-        "Renewable Energy Simulation and Projection",#br(),
-        p(class = 'lead d-inline',"80% by 2030")
-      ),
-      # div(class = "ms-auto",
-      #   tags$span(class = "navbar-text",
-      #     "80% by 2030"
-      #   )
-      # )
-    )
-  ),
-  
-  # Add padding for fixed navbar
-  div(style = "padding-top: 80px;"),
-  br(),br(),
-  #fluidRow(
-  #  column(4, #offset = 1,ß
-  div( class = 'd-flex justify-content-between flex-grow',
-       ### column - 1 ----
-    div(class = 'px-5 w-25 ',#mx-5
-    
-    # ScrollSpy Navigation in left panel
-    div(class = "mb-5 position-fixed", style = "top: 50px; z-index: 100;",
-      div(class = "glass-card card",
-        div(class = "card-body p-2",
-          tags$ul(class = "nav nav-pills justify-content-center gap-2 mb-3",
-          tags$li(class="nav-item",
-            tags$a(class = "nav-link p-2", href = "#parameters",
-              title = "Top level NI Energy Parameters",
-              `data-bs-toggle` = "tooltip",
-              `data-bs-placement` = "bottom",
-              icon("sliders-h")
-            )),
-            tags$a(class = "nav-link p-2", href = "#capacity",
-              title = "Offshore Pre-planning and Capacity Factors",
-              `data-bs-toggle` = "tooltip",
-              `data-bs-placement` = "bottom",
-              icon("battery-three-quarters")
-            ),
-            tags$a(class = "nav-link p-2", href = "#progression",
-              title = "Stage Progression Probability",
-              `data-bs-toggle` = "tooltip",
-              `data-bs-placement` = "bottom",
-              icon("arrow-right")
-            ),
-            tags$a(class = "nav-link p-2", href = "#timelines",
-              title = "Stage Duration Timelines",
-              `data-bs-toggle` = "tooltip",
-              `data-bs-placement` = "bottom",
-              icon("clock")
-            )
-          )
-        ),
-        actionButton(inputId = 'submit', 
-                          label = tagList(icon("play"), " Run Simulation"),
-                          class = "btn btn-primary",
-                          style = "white-space: nowrap;"),
-      )
+      
     ),
     
-    # Add spacing to prevent overlap
-    div(style = "margin-top: 140px;"),
-    
-    # Parameters Section
-    div(id = "parameters", class = "scroll-section",
-      # h2(class = 'text-body-secondary', icon("sliders-h"), " Energy Parameters"),
-      h1(class = 'text-body-secondary',  " "),
-      
-      
-      # Ion Range Slider with flat skin
-      div(class = "ion-range-container",
-          h5(class = 'lead',icon("chart-area"), " Baseline Renewables (GWhr)"),
-          tags$input(
-            id = "baseline_renewable",
-          type = "number",
-          step = 10,
-          name = "baseline_renewable",
-          value = 3126
-        )
-      ),
-      
-      div(class = "slider-section",
-        h5(class = 'lead', icon("calendar-alt"), " 2030 Demand (TWhr/yr)"),
-        tags$input(
-          id = "demand_2030",
-          type = "number",
-          step = 0.2,
-          name = "demand_2030",
-          value = 8
-        )
-      ),
-      
-      div(class = "slider-section",
-          h5(class = 'lead', "Number of Simulation runs"),
-          tags$input(
-            id = "number_runs",
-            type = "number",
-            step = '10',
-            name = "number_runs",
-            value = 5
-          ),
-          
-          tags$ul(class = 'text-body-secondary pt-3',
-            tags$li(class = 'small','The data is heavily skewed, a larger range of runs is needed for robust confidence intervals'),
-            tags$li(class = 'small','If experimenting you may lower the number of runs',tags$i('at your own risk')),
-            tags$li(class = 'small','For publication and reporting quality results a minimum of 80 runs is necessary'),
-            tags$li(class = 'small','For comparing scenarios a minimum of 80 runs is necessary'),
-            tags$li(class = 'small','For  Robust confidence intervals a minimum of 80 runs is necessary',
-               tags$small(class = 'text-body-secondary', 'Confidence intervals should always be reported along side Point estimates'))
-            
-      )
-      ),
-      br()
-      ),
-        
-      # div(class = "slider-section",
-      #   # h4('⚡ Capacity Parameters'),
-      #    h6(class = 'lead', "Capacity Factor (%)"),
-      #   tags$input(
-      #     id = "capacity_factor",
-      #     type = "number",
-      #     name = "capacity_factor",
-      #     value = ""
-      #   )
-      # ),   
-      
-       div(id = 'capacity', class = "scroll-section",
-           div(class = "slider-section",
-         h6(class = 'lead', " Capacity Factor") #icon("battery-three-quarters")
-         ),
-         # Mathematical equation for capacity calculation
-         div(class = "alert alert-info mt-3 mb-3 m-4", role = "alert",
-           h6(class = "lead alert-heading", icon("calculator"), " Nameplate Capacity Formula"),
-         br(),
-           tags$small(class = "text-muted fs-8",  " Conversion between Nameplate capacity and actual
-             Gernerated output is described by the capacity factor, CF"),
-           
-           div(class = "text-center p-3", style = "background-color: #f8f9fa; border-radius: 8px; margin: 10px 0;",
-             tags$p(style = "font-size: 12px; margin: 0; color:grey;",
-               "$$\\text{GW (nameplate)} = \\frac{\\text{TWh/yr}}{8.76 \\times \\text{CF}}$$"
+    # Navigation bar - simplified with text only
+    tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 sticky-top", #  fixed-top bg-white
+             `data-bs-theme` = "light",
+             div(class = "container-fluid d-inline",
+                 tags$a(class = "navbar-brand fw-bold d-inline", href = "#top",
+                        "Renewable Energy Simulation and Projection",#br(),
+                        p(class = 'lead d-inline',"80% by 2030")
+                 ),
+                 # div(class = "ms-auto",
+                 #   tags$span(class = "navbar-text",
+                 #     "80% by 2030"
+                 #   )
+                 # )
              )
-           ),
-           tags$small(class = "text-muted",
-             tags$strong("Where"), " CF is the Capacity Factor (% as a decimal), 8.76 = hours per year ÷ 1000"
-           )
-         ),
-
-      div(class = "slider-section",
-
-         div(class = "input-group mb-3",
-           tags$span(class = "input-group-text", " Capacity Factor"),
-           tags$input(id = "capacity_factor", type = "number", value = 22, min = 15, max = 40, step = 1, 
-                      class = "form-control bg-success-subtle", `aria-label` = "Capacity factor percentage"),
-           tags$span(class = "input-group-text", icon("percent"), )
-         ),
-         
-         # Real-time capacity factor feedback
-         div(class = "alert alert-light mt-2", style = "padding: 8px;",
-           tags$small(
-             icon("info-circle"), " Current CF: ",
-             tags$strong(textOutput("capacityFactorValue", inline = TRUE)), "%"
-             
-           ),
-           tags$p( textOutput('generationCapacityConversion')
-         )
-       )
-       ),
-      
-      div(class = "slider-section",
-          
-      h5(class = 'lead', " Pre - Planning Estimate"),
-      
-      div( class="btn-group", role="group", `aria-label`="Basic radio toggle button group",
-        tags$input(type="radio", class="btn-check", name="PlanEstimate", id="optimistic",
-                     autocomplete="off"),
-          tags$label(class="btn btn-outline-primary", `for`="optimistic", icon("thumbs-up"), " Optimistic"),
-          
-          tags$input(type="radio", class="btn-check", name="PlanEstimate", id="conservative", checked = TRUE,
-                     autocomplete="off"),
-          tags$label(class="btn btn-outline-primary", `for`="conservative", icon("shield-alt"), " Conservative"),
-          
-          tags$input(type="radio", class="btn-check", name="PlanEstimate", id="survey",
-                     autocomplete="off"),
-          tags$label(class="btn btn-outline-primary", `for`="survey", icon("poll"), " Sampled from Survey")
-      )
-    ),
-      
-      # Project Progression Probability Method Selection
-    
-      
-      div(class = "slider-section",
-          
-          
-      h5(class='lead', icon("water"), ' Offshore Wind Options'), 
-      
-      div( class="btn-group", role="group", `aria-label`="Basic radio toggle button group",
-        tags$input(type="radio", class="btn-check", name="offshore_option", id="offshore_include",
-                     autocomplete="off"),
-          tags$label(class="btn btn-outline-success", `for`="offshore_include", icon("water"), " Include Offshore Wind"),
-          
-          tags$input(type="radio", class="btn-check", name="offshore_option", id="offshore_exclude",
-                     autocomplete="off", checked = "checked"),
-          tags$label(class="btn btn-outline-success", `for`="offshore_exclude", icon("times-circle"), " Onshore Only")
-      ),
-      
-      br(),
-      div(class = 'mb-3',
-      tags$label(`for`="offshore_start",'Start month'),
-      tags$input(class = 'form-control bg-success-subtle', #bg-primary-subtle
-                 type="month", 
-                 id="offshore_start", 
-                 name="start", 
-                 min="2029-01", 
-                 max="2032-01", 
-                 value="2031-01"
-      )
-      ),
-      br(),br(),
-      
-      h5(class='lead', ' Offshore Wind Capacity (GW)'), 
-      
-      
-      tags$input(
-        id = "offshore_capacity",
-        type = "number",
-        step = 0.1, 
-        name = "offshore_capacity",
-        value = 0.5
-      )
-      )
-      ),
-      
-    div(class = "slider-section",
-        
-        h5(class = 'lead', icon("percentage"), ' Project Progression Probability Method'),
-        
-        div( class="btn-group", role="group", `aria-label`="Basic radio toggle button group",
-             tags$input(type="radio", class="btn-check", name="progression_prob_method", id="progression_prob_custom",
-                        autocomplete="off"),
-             tags$label(class="btn btn-outline-primary", `for`="progression_prob_custom", icon("edit"), " Custom"),
-             
-             tags$input(type="radio", class="btn-check", name="progression_prob_method", id="progression_prob_empirical",
-                        autocomplete="off", checked = "checked"),
-             tags$label(class="btn btn-outline-primary", `for`="progression_prob_empirical", icon("chart-bar"), " Empirical")
-        )
     ),
     
-      # Project Progression Section
-      div(id = "progression", class = "slider-section scroll-section",
-        h5(class='text-body-secondary', icon("percent"), ' Project Progression Probability'),
-        h6(class = 'lead',  " Planning → Connection"),
-        tags$input(
-          id = "planning_connection_prob",
-          type = "number",
-          name = "planning_connection_prob",
-          value = 72
-        ),
-        br(), br(),
-        h6(class = 'lead',  " Connection → Construction"),
-        tags$input(
-          id = "connection_construction_prob",
-          type = "number",
-          name = "connection_construction_prob",
-          value = 85
-        ),
-        br(), br(),
-        h6(class = 'lead',  " Construction → Completion"),
-        tags$input(
-          id = "connection_completion_prob",
-          type = "number",
-          name = "connection_completion_prob",
-          value = 100
-        )
-      ),
-      
-
-      
-      div(class = "slider-section",
-
-      h5(class = 'text-body-secondary', icon("clock"), ' Project progression Time'),
-      div( class = "btn-group", 
-           role = "group",
-           `aria-label` = "Basic radio toggle button group",
-        
-           tags$input(type="radio", class="btn-check", name="project_progression", id="custom",
-                     autocomplete="off"),
-          tags$label(class="btn btn-outline-primary", `for`="custom", icon("edit"), " Custom"),
-          
-
-          tags$input(type="radio", class="btn-check", name="project_progression", id="empirical",
-                     autocomplete="off", checked = "checked"),
-          tags$label(class="btn btn-outline-primary", `for`="empirical", icon("chart-bar"), " Empirical")
-      )
-    ),
-      
-      # checkboxInput("apply_manual_times", 
-      #               "", 
-      #               value = T),
-
-      # Timelines Section
-      div(id = "timelines", class = "slider-section scroll-section",
-        h5(class = 'text-body-secondary', icon("sun"), ' Solar Photovoltaic Timelines (months)'),
-        h6(class = 'lead',  " Planning → Connection"),
-        tags$input(
-          id = "planning_connection_time",
-          class= 'disabled',
-          type = "number",
-          step = 1,
-          name = "planning_connection_time",
-          value = 17
-        ),
-        br(), 
-        br(),
-        h6(class = 'lead',  " Connection → Construction"),
-        tags$input(
-          id = "connection_construction_time",
-          type = "number",
-          step = 1,
-          name = "connection_construction_time",
-          value = 4
-        ),
-        br(), 
-        br(),
-        h6(class = 'lead',  " Construction → Completion"),
-        tags$input(
-          id = "construction_completion_time",
-          type = "number",
-          step = 1,
-          name = "construction_completion_time",
-          value = 8
-        )
-      ),    
-      
-      div(class = "slider-section",
-        h5(icon("wind"), ' Wind Power Timelines'),
-        h6(class = 'lead',  " Planning → Connection "),
-        tags$input(
-          id = "planning_connection_time_wind",
-          type = "number",
-          step= 1,
-          name = "planning_connection_time_wind",
-          value = 29
-        ),
-        br(), br(),
-        h6(class = 'lead',  " Connection → Construction "),
-        tags$input(
-          id = "connection_construction_time_wind",
-          type = "number",
-          step = 1,
-          name = "connection_construction_time_wind",
-          value = 45
-        ),
-        br(), br(),
-        h6(class = 'lead',  " Construction → Completion "),
-        tags$input(
-          id = "construction_completion_time_wind",
-          type = "number",
-          step = 1,
-          name = "construction_completion_time_wind",
-          value = 12
-        )
-      )
-  ),
-  ### column - 2----
-  #column(6, class = 'px-5 ',#offset = 1, mx-5
-  div(class = 'px-5 flex-grow-1',#offset = 1, mx-5
-         # Dashboard Section
-         #div(id = "dashboard", class = "scroll-section",
-           # h2(class = "text-center mb-4", icon("chart-pie"), " Energy Dashboard"),
-      
-           #h2(class = "text-center mb-4",  " "),
-      
-     
-         
-         # Scenario input section
-      # div(class='d-flex flex-column justify-content-center align-items-center ',
-      #     div(class='w-50',
-      #    div(class = "input-group mb-3",
-      #        tags$input(type = "text", class = "form-control", 
-      #                   placeholder = " Submit Scenario for simulation ", 
-      #                   `aria-label` = "Scenario name input", 
-      #                   disabled = T,
-      #                   `aria-describedby` = "button-addon2"),
-
-            #  actionButton(inputId = 'submit', 
-            #               label = tagList(icon("play"), " Run Simulation"),
-            #               class = "btn btn-primary",
-            #               style = "white-space: nowrap;"),
-
-
-        #  ),
-      
-         # Cache management section
-        #  div(class = "input-group mb-3",
-        #      tags$button(class = "btn btn-outline-secondary btn-sm", type = "button", id = "clear-cache",
-        #                  icon("trash"), " Clear Cache",
-        #                  title = "Clear all cached simulation results"
-        #      ),
+    # Add padding for fixed navbar
+    # div(style = "padding-top: 80px;"),
+    
+    br(), br(),
+    
+    #fluidRow(
+    #  column(4, #offset = 1,ß
+    div( class = 'd-flex justify-content-between flex-grow',
+         ### column - 1 ----
+         div(class = 'px-5 w-25 ',#mx-5
              
-        #      tags$input(type = "text", class = "form-control", 
-        #                 placeholder = "Clear cache", 
-        #                 `aria-label` = "Clear cache", 
-        #                 disabled = T,
-        #                 `aria-describedby` = "Clear cache")
+             # ScrollSpy Navigation in left panel
+             div(class = "mb-5 position-sticky", style = "top: 90px; z-index: 100;",
+                 div(class = "glass-card card",
+                     div(class = "card-body p-2",
+                         tags$ul(class = "nav nav-pills justify-content-center gap-2 mb-3",
+                                 tags$li(class="nav-item",
+                                         tags$a(class = "nav-link p-2", href = "#parameters",
+                                                title = "Top level NI Energy Parameters",
+                                                `data-bs-toggle` = "tooltip",
+                                                `data-bs-placement` = "bottom",
+                                                icon("sliders-h")
+                                         )),
+                                 tags$a(class = "nav-link p-2", href = "#capacity",
+                                        title = "Offshore Pre-planning and Capacity Factors",
+                                        `data-bs-toggle` = "tooltip",
+                                        `data-bs-placement` = "bottom",
+                                        icon("battery-three-quarters")
+                                 ),
+                                 tags$a(class = "nav-link p-2", href = "#progression",
+                                        title = "Stage Progression Probability",
+                                        `data-bs-toggle` = "tooltip",
+                                        `data-bs-placement` = "bottom",
+                                        icon("arrow-right")
+                                 ),
+                                 tags$a(class = "nav-link p-2", href = "#timelines",
+                                        title = "Stage Duration Timelines",
+                                        `data-bs-toggle` = "tooltip",
+                                        `data-bs-placement` = "bottom",
+                                        icon("clock")
+                                 )
+                         )
+                     ),
+                     actionButton(inputId = 'submit', 
+                                  label = tagList(icon("play"), " Run Simulation"),
+                                  class = "btn btn-primary",
+                                  style = "white-space: nowrap;"),
+                 )
+             ),
              
-        #      )
-         
-        #  )#,
+             # Add spacing to prevent overlap
+             div(style = "margin-top: 60px;"),
+             
+             
+             # Parameters Section
+             div(id = "parameters", class = "scroll-section",
+                 # h2(class = 'text-body-secondary', icon("sliders-h"), " Energy Parameters"),
+                 h1(class = 'text-body-secondary',  " "),
+                 
+                 
+                 # Ion Range Slider with flat skin
+                 div(class = "ion-range-container",
+                     h5(class = 'lead',icon("chart-area"), " Baseline Renewables (GWhr)"),
+                     tags$input(
+                       id = "baseline_renewable",
+                       type = "number",
+                       step = 10,
+                       name = "baseline_renewable",
+                       value = 3126
+                     )
+                 ),
+                 
+                 div(class = "slider-section",
+                     h5(class = 'lead', icon("calendar-alt"), " 2030 Demand (TWhr/yr)"),
+                     tags$input(
+                       id = "demand_2030",
+                       type = "number",
+                       step = 0.2,
+                       name = "demand_2030",
+                       value = 8
+                     )
+                 ),
+                 
+                 div(class = "slider-section",
+                     h5(class = 'lead', "Number of Simulation runs"),
+                     tags$input(
+                       id = "number_runs",
+                       type = "number",
+                       step = '10',
+                       name = "number_runs",
+                       value = 5
+                     ),
+                     
+                     tags$ul(class = 'text-body-secondary pt-3',
+                             tags$li(class = 'small','The data is heavily skewed, a larger range of runs is needed for robust confidence intervals'),
+                             tags$li(class = 'small','If experimenting you may lower the number of runs',tags$i('at your own risk')),
+                             tags$li(class = 'small','For publication and reporting quality results a minimum of 80 runs is necessary'),
+                             tags$li(class = 'small','For comparing scenarios a minimum of 80 runs is necessary'),
+                             tags$li(class = 'small','For  Robust confidence intervals a minimum of 80 runs is necessary',
+                                     tags$small(class = 'text-body-secondary', 'Confidence intervals should always be reported along side Point estimates'))
+                             
+                     )
+                 ),
+                 br()
+             ),
+             
+             # div(class = "slider-section",
+             #   # h4('⚡ Capacity Parameters'),
+             #    h6(class = 'lead', "Capacity Factor (%)"),
+             #   tags$input(
+             #     id = "capacity_factor",
+             #     type = "number",
+             #     name = "capacity_factor",
+             #     value = ""
+             #   )
+             # ),   
+             
+             div(id = 'capacity', class = "scroll-section",
+                 div(class = "slider-section",
+                     h6(class = 'lead', " Capacity Factor") #icon("battery-three-quarters")
+                 ),
+                 # Mathematical equation for capacity calculation
+                 div(class = "alert alert-info mt-3 mb-3 m-4", role = "alert",
+                     h6(class = "lead alert-heading", icon("calculator"), " Nameplate Capacity Formula"),
+                     br(),
+                     tags$small(class = "text-muted fs-8",  " Conversion between Nameplate capacity and actual
+             Gernerated output is described by the capacity factor, CF"),
+                     
+                     div(class = "text-center p-3", style = "background-color: #f8f9fa; border-radius: 8px; margin: 10px 0;",
+                         tags$p(style = "font-size: 12px; margin: 0; color:grey;",
+                                "$$\\text{GW (nameplate)} = \\frac{\\text{TWh/yr}}{8.76 \\times \\text{CF}}$$"
+                         )
+                     ),
+                     tags$small(class = "text-muted",
+                                tags$strong("Where"), " CF is the Capacity Factor (% as a decimal), 8.76 = hours per year ÷ 1000"
+                     )
+                 ),
+                 
+                 div(class = "slider-section",
+                     
+                     div(class = "input-group mb-3",
+                         tags$span(class = "input-group-text", " Capacity Factor"),
+                         tags$input(id = "capacity_factor", type = "number", value = 22, min = 15, max = 40, step = 1, 
+                                    class = "form-control bg-success-subtle", `aria-label` = "Capacity factor percentage"),
+                         tags$span(class = "input-group-text", icon("percent"), )
+                     ),
+                     
+                     # Real-time capacity factor feedback
+                     div(class = "alert alert-light mt-2", style = "padding: 8px;",
+                         tags$small(
+                           icon("info-circle"), " Current CF: ",
+                           tags$strong(textOutput("capacityFactorValue", inline = TRUE)), "%"
+                           
+                         ),
+                         tags$p( textOutput('generationCapacityConversion')
+                         )
+                     )
+                 ),
+                 
+                 div(class = "slider-section",
+                     
+                     h5(class = 'lead', " Pre - Planning Estimate"),
+                     
+                     div( class="btn-group", role="group", `aria-label`="Basic radio toggle button group",
+                          tags$input(type="radio", class="btn-check", name="PlanEstimate", id="optimistic",
+                                     autocomplete="off"),
+                          tags$label(class="btn btn-outline-primary", `for`="optimistic", icon("thumbs-up"), " Optimistic"),
+                          
+                          tags$input(type="radio", class="btn-check", name="PlanEstimate", id="conservative", checked = TRUE,
+                                     autocomplete="off"),
+                          tags$label(class="btn btn-outline-primary", `for`="conservative", icon("shield-alt"), " Conservative"),
+                          
+                          tags$input(type="radio", class="btn-check", name="PlanEstimate", id="survey",
+                                     autocomplete="off"),
+                          tags$label(class="btn btn-outline-primary", `for`="survey", icon("poll"), " Sampled from Survey")
+                     )
+                 ),
+                 
+                 # Project Progression Probability Method Selection
+                 
+                 
+                 div(class = "slider-section",
+                     
+                     
+                     h5(class='lead', icon("water"), ' Offshore Wind Options'), 
+                     
+                     div( class="btn-group", role="group", `aria-label`="Basic radio toggle button group",
+                          tags$input(type="radio", class="btn-check", name="offshore_option", id="offshore_include",
+                                     autocomplete="off"),
+                          tags$label(class="btn btn-outline-success", `for`="offshore_include", icon("water"), " Include Offshore Wind"),
+                          
+                          tags$input(type="radio", class="btn-check", name="offshore_option", id="offshore_exclude",
+                                     autocomplete="off", checked = "checked"),
+                          tags$label(class="btn btn-outline-success", `for`="offshore_exclude", icon("times-circle"), " Onshore Only")
+                     ),
+                     
+                     br(),
+                     div(class = 'mb-3',
+                         tags$label(`for`="offshore_start",'Start month'),
+                         tags$input(class = 'form-control bg-success-subtle', #bg-primary-subtle
+                                    type="month", 
+                                    id="offshore_start", 
+                                    name="start", 
+                                    min="2029-01", 
+                                    max="2032-01", 
+                                    value="2031-01"
+                         )
+                     ),
+                     br(),br(),
+                     
+                     h5(class='lead', ' Offshore Wind Capacity (GW)'), 
+                     
+                     
+                     tags$input(
+                       id = "offshore_capacity",
+                       type = "number",
+                       step = 0.1, 
+                       name = "offshore_capacity",
+                       value = 0.5
+                     )
+                 )
+             ),
+             
+             div(class = "slider-section",
+                 
+                 h5(class = 'lead', icon("percentage"), ' Project Progression Probability Method'),
+                 
+                 div( class="btn-group", role="group", `aria-label`="Basic radio toggle button group",
+                      tags$input(type="radio", class="btn-check", name="progression_prob_method", id="progression_prob_custom",
+                                 autocomplete="off"),
+                      tags$label(class="btn btn-outline-primary", `for`="progression_prob_custom", icon("edit"), " Custom"),
+                      
+                      tags$input(type="radio", class="btn-check", name="progression_prob_method", id="progression_prob_empirical",
+                                 autocomplete="off", checked = "checked"),
+                      tags$label(class="btn btn-outline-primary", `for`="progression_prob_empirical", icon("chart-bar"), " Empirical")
+                 )
+             ),
+             
+             # Project Progression Section
+             div(id = "progression", class = "slider-section scroll-section",
+                 h5(class='text-body-secondary', icon("percent"), ' Project Progression Probability'),
+                 h6(class = 'lead',  " Planning → Connection"),
+                 tags$input(
+                   id = "planning_connection_prob",
+                   type = "number",
+                   name = "planning_connection_prob",
+                   value = 72
+                 ),
+                 br(), br(),
+                 h6(class = 'lead',  " Connection → Construction"),
+                 tags$input(
+                   id = "connection_construction_prob",
+                   type = "number",
+                   name = "connection_construction_prob",
+                   value = 85
+                 ),
+                 br(), br(),
+                 h6(class = 'lead',  " Construction → Completion"),
+                 tags$input(
+                   id = "connection_completion_prob",
+                   type = "number",
+                   name = "connection_completion_prob",
+                   value = 100
+                 )
+             ),
+             
+             
+             
+             div(class = "slider-section",
+                 
+                 h5(class = 'text-body-secondary', icon("clock"), ' Project progression Time'),
+                 div( class = "btn-group", 
+                      role = "group",
+                      `aria-label` = "Basic radio toggle button group",
+                      
+                      tags$input(type="radio", class="btn-check", name="project_progression", id="custom",
+                                 autocomplete="off"),
+                      tags$label(class="btn btn-outline-primary", `for`="custom", icon("edit"), " Custom"),
+                      
+                      
+                      tags$input(type="radio", class="btn-check", name="project_progression", id="empirical",
+                                 autocomplete="off", checked = "checked"),
+                      tags$label(class="btn btn-outline-primary", `for`="empirical", icon("chart-bar"), " Empirical")
+                 )
+             ),
+             
+             # checkboxInput("apply_manual_times", 
+             #               "", 
+             #               value = T),
+             
+             # Timelines Section
+             div(id = "timelines", class = "slider-section scroll-section",
+                 h5(class = 'text-body-secondary', icon("sun"), ' Solar Photovoltaic Timelines (months)'),
+                 h6(class = 'lead',  " Planning → Connection"),
+                 tags$input(
+                   id = "planning_connection_time",
+                   class= 'disabled',
+                   type = "number",
+                   step = 1,
+                   name = "planning_connection_time",
+                   value = 17
+                 ),
+                 br(), 
+                 br(),
+                 h6(class = 'lead',  " Connection → Construction"),
+                 tags$input(
+                   id = "connection_construction_time",
+                   type = "number",
+                   step = 1,
+                   name = "connection_construction_time",
+                   value = 4
+                 ),
+                 br(), 
+                 br(),
+                 h6(class = 'lead',  " Construction → Completion"),
+                 tags$input(
+                   id = "construction_completion_time",
+                   type = "number",
+                   step = 1,
+                   name = "construction_completion_time",
+                   value = 8
+                 )
+             ),    
+             
+             div(class = "slider-section",
+                 h5(icon("wind"), ' Wind Power Timelines'),
+                 h6(class = 'lead',  " Planning → Connection "),
+                 tags$input(
+                   id = "planning_connection_time_wind",
+                   type = "number",
+                   step= 1,
+                   name = "planning_connection_time_wind",
+                   value = 29
+                 ),
+                 br(), br(),
+                 h6(class = 'lead',  " Connection → Construction "),
+                 tags$input(
+                   id = "connection_construction_time_wind",
+                   type = "number",
+                   step = 1,
+                   name = "connection_construction_time_wind",
+                   value = 45
+                 ),
+                 br(), br(),
+                 h6(class = 'lead',  " Construction → Completion "),
+                 tags$input(
+                   id = "construction_completion_time_wind",
+                   type = "number",
+                   step = 1,
+                   name = "construction_completion_time_wind",
+                   value = 12
+                 )
+             )
+         ),
+         ### column - 2----
+         #column(6, class = 'px-5 ',#offset = 1, mx-5
+         div(class = 'px-5 flex-grow-1',#offset = 1, mx-5
+             # Dashboard Section
+             #div(id = "dashboard", class = "scroll-section",
+             # h2(class = "text-center mb-4", icon("chart-pie"), " Energy Dashboard"),
+             
+             #h2(class = "text-center mb-4",  " "),
+             
+             
+             
+             # Scenario input section
+             # div(class='d-flex flex-column justify-content-center align-items-center ',
+             #     div(class='w-50',
+             #    div(class = "input-group mb-3",
+             #        tags$input(type = "text", class = "form-control", 
+             #                   placeholder = " Submit Scenario for simulation ", 
+             #                   `aria-label` = "Scenario name input", 
+             #                   disabled = T,
+             #                   `aria-describedby` = "button-addon2"),
+             
+             #  actionButton(inputId = 'submit', 
+             #               label = tagList(icon("play"), " Run Simulation"),
+             #               class = "btn btn-primary",
+             #               style = "white-space: nowrap;"),
+             
+             
+             #  ),
+             
+             # Cache management section
+             #  div(class = "input-group mb-3",
+             #      tags$button(class = "btn btn-outline-secondary btn-sm", type = "button", id = "clear-cache",
+             #                  icon("trash"), " Clear Cache",
+             #                  title = "Clear all cached simulation results"
+             #      ),
+             
+             #      tags$input(type = "text", class = "form-control", 
+             #                 placeholder = "Clear cache", 
+             #                 `aria-label` = "Clear cache", 
+             #                 disabled = T,
+             #                 `aria-describedby` = "Clear cache")
+             
+             #      )
+             
+             #  )#,
              
              # div(class = "input-group-text small text-muted",
              #     "Cache saves time for identical parameters"
              #)
              
-         #),
-        
-      
- 
-         # div(class = "module-border-wrap",
-         #     div(class = "module",
-         #       div(h4( class ='flex-direction-row', textOutput('planning_connection_prob'),'%')),
-         #       p(class = "text-center text-muted",  " Production")
-         #     )
-         #   ),
-
-           
-           # plotOutput("distPlot"),
-         # plotOutput('preplanning_cumulative'),
-      
-     # Charts arranged horizontally in rows
-     div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
-       # Pre-planning Cumulative
-       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
-         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-line"), " Pre-planning Cumulative"),
-         div(style = 'height: 300px;',
-           echarts4rOutput('preplanning_cumulative_echarts', height = '300px')
+             #),
+             
+             
+             
+             # div(class = "module-border-wrap",
+             #     div(class = "module",
+             #       div(h4( class ='flex-direction-row', textOutput('planning_connection_prob'),'%')),
+             #       p(class = "text-center text-muted",  " Production")
+             #     )
+             #   ),
+             
+             
+             # plotOutput("distPlot"),
+             # plotOutput('preplanning_cumulative'),
+             
+             # Charts arranged horizontally in rows
+             div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
+                 # Pre-planning Cumulative
+                 div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+                     h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-line"), " Pre-planning Cumulative"),
+                     div(style = 'height: 300px;',
+                         echarts4rOutput('preplanning_cumulative_echarts', height = '300px')
+                     ),
+                     div(class = 'd-flex justify-content-center mt-2',
+                         div(
+                           style = "border:5px solid red;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+                           tags$small(class = 'text-muted', 'Cumulative'),
+                           h5(textOutput(inline = T,'new_res_preplanning_cumulative_end_date'),'MW'),
+                           tags$small(class = 'text-muted text-center', style = 'font-size: 0.7rem;', 'by end of simulation')
+                         )
+                     )
+                 ),
+                 # Pre-planning Monthly
+                 div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+                     h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-bar"), " Pre-planning Monthly"),
+                     div(style = 'height: 300px;',
+                         echarts4rOutput('preplanning_yearly', height = '300px')
+                     ),
+                     div(class = 'd-flex justify-content-center mt-2',
+                         div(
+                           style = "border:5px solid red;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+                           tags$small(class = 'text-muted', 'Annual New RES'),
+                           h5(textOutput(inline = T,'new_res_preplanning_yearly_end_date'),'MW'),
+                           tags$small(class = 'text-muted', style = 'font-size: 0.7rem;', 'at simulation end')
+                         )
+                     )
+                 )
+             ),
+             
+             div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
+                 # Current Projects Cumulative
+                 div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+                     h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-area"), " Current Projects Cumulative"),
+                     div(style = 'height: 300px;',
+                         echarts4rOutput('current_cumulative', height = '300px')
+                     ),
+                     div(class = 'd-flex justify-content-center mt-2',
+                         div(
+                           style = "border:5px solid #2196F3;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+                           tags$small(class = 'text-muted', 'Total New RES'),
+                           h5(textOutput(inline = T,'new_res_current_cumulative_end_date'),'MW'),
+                           tags$small(class = 'text-muted', style = 'font-size: 0.7rem;', 'by simulation end')
+                         )
+                     )
+                 ),
+                 # Current Projects Monthly
+                 div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+                     h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("calendar-alt"), " Current Projects Monthly"),
+                     div(style = 'height: 300px;',
+                         echarts4rOutput('current_yearly', height = '300px')
+                     ),
+                     div(class = 'd-flex justify-content-center mt-2',
+                         div(
+                           style = "border:5px solid var(--bs-info);justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+                           tags$small(class = 'text-muted', 'New RES'),
+                           h5(textOutput(inline = T,'new_res_current_yearly_end_date'),'MW'),
+                           tags$small(class = 'text-muted text-center', style = 'font-size: 0.7rem;', 'current pipeline')
+                         )
+                     )
+                 )
+             ),
+             
+             div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
+                 # Offshore Wind Capacity Monthly
+                 div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
+                     h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("water"), " Offshore Wind Capacity Monthly"),
+                     div(style = 'height: 300px;',
+                         echarts4rOutput('offshore_wind_plot', height = '300px')
+                     ),
+                     div(class = 'd-flex justify-content-center mt-2',
+                         div(
+                           style = "border:5px solid limegreen;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
+                           tags$small(class = 'text-muted', 'Annually producing'),
+                           h6(textOutput(inline = T,'offshore_wind_capacity'),'MW/yr'),
+                           h6('From ',textOutput(inline = T,'offshore_wind_start'))
+                         )
+                     )
+                 )
+             ),
+             
+             # Real-time parameter status
+             div(class = "alert alert-info mt-3",
+                 h6(icon("info-circle"), " Current Server-Side Parameters"),
+                 textOutput("parameterStatus")
+             ),
+             
+             # Comprehensive server-side values table
+             div(class = "mt-4 d-flex justify-content-between align-items-center flex-column",
+                 h5(class =  "text-body-secondary p-5", "Complete Configuration Set"), #icon("table"),
+                 tableOutput("serverValuesTable")
+             ),
+             
+             # tableOutput("paramsTable"),
+             # tableOutput("summaryTable")
          ),
-         div(class = 'd-flex justify-content-center mt-2',
-           div(
-             style = "border:5px solid red;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
-             tags$small(class = 'text-muted', 'Cumulative'),
-             h5(textOutput(inline = T,'new_res_preplanning_cumulative_end_date'),'MW'),
-             tags$small(class = 'text-muted text-center', style = 'font-size: 0.7rem;', 'by end of simulation')
-           )
-         )
-       ),
-       # Pre-planning Monthly
-       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
-         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-bar"), " Pre-planning Monthly"),
-         div(style = 'height: 300px;',
-           echarts4rOutput('preplanning_yearly', height = '300px')
-         ),
-         div(class = 'd-flex justify-content-center mt-2',
-           div(
-             style = "border:5px solid red;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
-             tags$small(class = 'text-muted', 'Annual New RES'),
-             h5(textOutput(inline = T,'new_res_preplanning_yearly_end_date'),'MW'),
-             tags$small(class = 'text-muted', style = 'font-size: 0.7rem;', 'at simulation end')
-           )
-         )
-       )
-     ),
-     
-     div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
-       # Current Projects Cumulative
-       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
-         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("chart-area"), " Current Projects Cumulative"),
-         div(style = 'height: 300px;',
-           echarts4rOutput('current_cumulative', height = '300px')
-         ),
-         div(class = 'd-flex justify-content-center mt-2',
-           div(
-             style = "border:5px solid #2196F3;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
-             tags$small(class = 'text-muted', 'Total New RES'),
-             h5(textOutput(inline = T,'new_res_current_cumulative_end_date'),'MW'),
-             tags$small(class = 'text-muted', style = 'font-size: 0.7rem;', 'by simulation end')
-           )
-         )
-       ),
-       # Current Projects Monthly
-       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
-         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("calendar-alt"), " Current Projects Monthly"),
-         div(style = 'height: 300px;',
-           echarts4rOutput('current_yearly', height = '300px')
-         ),
-         div(class = 'd-flex justify-content-center mt-2',
-           div(
-             style = "border:5px solid var(--bs-info);justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
-             tags$small(class = 'text-muted', 'New RES'),
-             h5(textOutput(inline = T,'new_res_current_yearly_end_date'),'MW'),
-             tags$small(class = 'text-muted text-center', style = 'font-size: 0.7rem;', 'current pipeline')
-           )
-         )
-       )
-     ),
-     
-     div(class = 'd-flex flex-wrap justify-content-between gap-3 mb-4',
-       # Offshore Wind Capacity Monthly
-       div(class = 'flex-fill', style = 'min-width: 45%; max-width: 48%;',
-         h5(class = 'text-body-secondary px-3 py-2 fw-bold', icon("water"), " Offshore Wind Capacity Monthly"),
-         div(style = 'height: 300px;',
-           echarts4rOutput('offshore_wind_plot', height = '300px')
-         ),
-         div(class = 'd-flex justify-content-center mt-2',
-           div(
-             style = "border:5px solid limegreen;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:120px;height:120px;",
-             tags$small(class = 'text-muted', 'Annually producing'),
-             h6(textOutput(inline = T,'offshore_wind_capacity'),'MW/yr'),
-             h6('From ',textOutput(inline = T,'offshore_wind_start'))
-           )
-         )
-       )
-     ),
-     
-           # Real-time parameter status
-           div(class = "alert alert-info mt-3",
-             h6(icon("info-circle"), " Current Server-Side Parameters"),
-             textOutput("parameterStatus")
-           ),
-           
-           # Comprehensive server-side values table
-           div(class = "mt-4 d-flex justify-content-between align-items-center flex-column",
-             h5(class =  "text-body-secondary p-5", "Complete Configuration Set"), #icon("table"),
-             tableOutput("serverValuesTable")
-           ),
-           
-        # tableOutput("paramsTable"),
-          # tableOutput("summaryTable")
-         ),
-      
-  #column(2,class = 'pe-5',
-  ### column-sticky ----
-
-  div(style = 'position:sticky; top:8%; height:90vh;',
-
-       # Loading overlay - centered and doesn't affect layout
-       div(id= 'loading', 
-           class = 'alert alert-danger rounded-3 p-3',
-           style = 'position:fixed;top:10%;left:60%;transform:translate(-50%,-50%);z-index:9999;opacity:0.8;display:none;box-shadow:0 4px 6px rgba(0,0,0,0.3);',
-             div(class='d-flex gap-3 align-items-center',
-                 span(class="loader"),
-                   
-                   h4(class = 'mb-0 lead','Loading '),
-      span(class = 'badge pill-rounded text-bg-light',
-          style = '',
-          tags$small(class=' mb-0','Inputs locked')
-      )
-      )
+         
+         #column(2,class = 'pe-5',
+         ### column-sticky ----
+         
+         div(style = 'position:sticky; top:8%; height:90vh;',
+             
+             # Loading overlay - centered and doesn't affect layout
+             div(id= 'loading', 
+                 class = 'alert alert-danger rounded-3 p-3',
+                 style = 'position:fixed;top:5%;left:90%;transform:translate(-50%,-50%);z-index:9999;opacity:1;display:none;box-shadow:0 4px 6px rgba(0,0,0,0.3);',
+                 div(class='d-flex gap-3 align-items-center',
+                     span(class="loader"),
+                     
+                     h4(class = 'mb-0 lead','Loading '),
+                     span(class = 'badge pill-rounded text-bg-light',
+                          style = '',
+                          tags$small(class=' mb-0','Inputs locked')
+                     )
+                 )
                  
              ),
-
              
-      div(class = 'py-2 px-5 me-5 bg-info-subtle rounded-5 position-relative',#offset = 1, mx-5
-      
-      # div(class = 'alert alert-primary rounded-2 top-0 start-100',
-      #     h3(style = 'text-align:center',':80% Target:')),
-      
-      span( class="badge bg-info rounded-2 rounded-pill",
-      style="
+             div(class = 'py-2 px-5 me-5 bg-info-subtle rounded-5 position-relative',#offset = 1, mx-5
+                 
+                 # div(class = 'alert alert-primary rounded-2 top-0 start-100',
+                 #     h3(style = 'text-align:center',':80% Target:')),
+                 
+                 span( class="badge bg-info rounded-2 rounded-pill",
+                       style="
           top: -15px;
           left: 10px;
            position: absolute;",
-                        
-        h6(style="text-align:center;color:white;",'80% by 2030')
-      ),
-          
-         div(class = 'alert alert-info',
-           style =
-             "justify-content: center;border-radius: 25px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-           tags$small(class = 'mb-1 text-muted text-center', 'Proportion of Demand Renewable Sources'),
-           h3(textOutput(inline = T, 'target_pct_target_date'),"%"),
-           #h5( "2 MW/yr"),
-           tags$small(class = 'text-muted text-centre text-center','Total RES/ TER'),
-           tags$h4(class = 'mt-3text-white text-centre text-center','by 2030')
-           
-           ),
-           div(
-             style =
-               "background:white;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-             tags$small(class = 'text-muted', 'Cumulative Total New Capacity'),
-             h4(span(textOutput(inline = T,'total_new_res_target_date'),"MW/yr")),
-             #h4( "2 MW/yr"),
-             tags$small(class = 'text-muted text-centre text-center','all new RES by 2030'),
-             ),
-         div(
-               style =
-                 "background:white;border:5px solid #2196F3;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 10px auto;",
-               tags$small(class = 'text-muted', 'Annual New Capacity'),
-               # h3( "2 MW/yr"),
-               h3(textOutput(inline = T,'new_res_current_cumulative_target_date'),'MW'),
-               tags$small(class = 'text-muted text-centre text-center','current pipeline to 2030'),
-              ), 
-         div(
-                 style =
-                   "background:white;border:5px solid #2196F3;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
-                 tags$small(class = 'text-muted', 'Annual New Capacity'),
-                 # h5( "2 MW/yr"),
-                 h5(textOutput(inline = T,'new_res_preplanning_cumulative_target_date'),'MW'),
-                 tags$small(class = 'text-muted text-centre text-center','Pre-planning Pipeline'),
+                       
+                       h6(style="text-align:center;color:white;",'80% by 2030')
+                 ),
                  
-                 tags$div(class = 'h4 text-black text-centre text-center','up to end 2030')
-              )
+                 div(class = 'alert alert-info',
+                     style =
+                       "justify-content: center;border-radius: 25px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
+                     tags$small(class = 'mb-1 text-muted text-center', 'Proportion of Demand Renewable Sources'),
+                     h3(textOutput(inline = T, 'target_pct_target_date'),"%"),
+                     #h5( "2 MW/yr"),
+                     tags$small(class = 'text-muted text-centre text-center','Total RES/ TER'),
+                     tags$h4(class = 'mt-3text-white text-centre text-center','by 2030')
+                     
+                 ),
+                 div(
+                   style =
+                     "background:white;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
+                   tags$small(class = 'text-muted', 'Cumulative Total New Capacity'),
+                   h4(span(textOutput(inline = T,'total_new_res_target_date'),"MW/yr")),
+                   #h4( "2 MW/yr"),
+                   tags$small(class = 'text-muted text-centre text-center','all new RES by 2030'),
+                 ),
+                 div(
+                   style =
+                     "background:white;border:5px solid #2196F3;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 10px auto;",
+                   tags$small(class = 'text-muted', 'Annual New Capacity'),
+                   # h3( "2 MW/yr"),
+                   h3(textOutput(inline = T,'new_res_current_cumulative_target_date'),'MW'),
+                   tags$small(class = 'text-muted text-centre text-center','current pipeline to 2030'),
+                 ), 
+                 div(
+                   style =
+                     "background:white;border:5px solid #2196F3;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
+                   tags$small(class = 'text-muted', 'Annual New Capacity'),
+                   # h5( "2 MW/yr"),
+                   h5(textOutput(inline = T,'new_res_preplanning_cumulative_target_date'),'MW'),
+                   tags$small(class = 'text-muted text-centre text-center','Pre-planning Pipeline'),
+                   
+                   tags$div(class = 'h4 text-black text-centre text-center','up to end 2030')
+                 )
+                 
+             )
+         )
          
-  )
-  )
-  
-  ),
-  
-  # Footer section
-  div(class = "container",
-    tags$footer(class = "d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top",
-      p(class = "col-md-4 mb-0 text-body-secondary", "© 80% by 2030"),
-      tags$a(href = "#top", class = "col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none",
-        #icon("bolt", style = "font-size: 32px; color: #2196F3;"),
-        img(src = 'static/DfE.jpeg', height = "29", class = "ms-2")
-      ),
-      tags$ul(class = "nav col-md-4 justify-content-end",
-        tags$li(class = "nav-item",
-          tags$a(href = "#parameters", class = "nav-link px-2 text-body-secondary", "NI")
-        ),
-        tags$li(class = "nav-item",
-          tags$a(href = "#capacity", class = "nav-link px-2 text-body-secondary", "Capacity")
-        ),
-        tags$li(class = "nav-item",
-          tags$a(href = "#progression", class = "nav-link px-2 text-body-secondary", "Progression")
-        ),
-        tags$li(class = "nav-item",
-          tags$a(href = "#timelines", class = "nav-link px-2 text-body-secondary", "Duration")
-        )#,
-        # tags$li(class = "nav-item",
-        #   tags$a(href = "#dashboard", class = "nav-link px-2 text-body-secondary", "Dashboard")
-        # )
-      )
+    ),
+    
+    # Footer section
+    div(class = "container",
+        tags$footer(class = "d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top",
+                    p(class = "col-md-4 mb-0 text-body-secondary", "© 80% by 2030"),
+                    tags$a(href = "#top", class = "col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none",
+                           #icon("bolt", style = "font-size: 32px; color: #2196F3;"),
+                           img(src = 'static/DfE.jpeg', height = "29", class = "ms-2")
+                    ),
+                    tags$ul(class = "nav col-md-4 justify-content-end",
+                            tags$li(class = "nav-item",
+                                    tags$a(href = "#parameters", class = "nav-link px-2 text-body-secondary", "NI")
+                            ),
+                            tags$li(class = "nav-item",
+                                    tags$a(href = "#capacity", class = "nav-link px-2 text-body-secondary", "Capacity")
+                            ),
+                            tags$li(class = "nav-item",
+                                    tags$a(href = "#progression", class = "nav-link px-2 text-body-secondary", "Progression")
+                            ),
+                            tags$li(class = "nav-item",
+                                    tags$a(href = "#timelines", class = "nav-link px-2 text-body-secondary", "Duration")
+                            )#,
+                            # tags$li(class = "nav-item",
+                            #   tags$a(href = "#dashboard", class = "nav-link px-2 text-body-secondary", "Dashboard")
+                            # )
+                    )
+        )
     )
-  )
+    ),
   
+  # Tab 2: Energy Flow Diagram (original app1.R content)
+  tabPanel("Energy Flow Diagram",
+    icon = icon("diagram-project"),
+    value = "energy_flow_tab",
+    uiOutput("main_ui")
+  )
 )
 
-# Helper function to get slider value
-getSliderValue <- function(inputValue, defaultValue) {
-  if (is.null(inputValue) || inputValue == "") {
-    return(defaultValue)
-  }
-  return(as.numeric(inputValue))
-}
-
-
+#server
 server <- function(input, output, session) {
+  
+  # ==== Energy Flow Diagram Logic (original app1.R) ====
+  state <- reactiveValues(
+    view = "home",            
+    selected_page = NULL    
+  )
+  
+  output$main_ui <- renderUI({
+    if (state$view == "home") {
+      diagram_ui("diagram")  
+    } else {
+      tagList(
+        tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 sticky-top", #  fixed-top bg-white
+                 `data-bs-theme` = "light",
+                 div(class = "container-fluid d-inline",
+                     actionButton("go_back", "← Back to Diagram"), #br(),br(),
+                     tags$a(class = "ms-3 ps-3 navbar-brand fw-bold d-inline", href = "#top",
+                            paste(state$selected_page, 'Targets, Improvement and Projections'),#br(),
+                            p(class = 'lead d-inline',"80% by 2030")
+                     )
+      
+                 )
+
+            ),
+        switch(
+          state$selected_page,
+          "Generation"   = generation_ui("generation"),
+          "Transmission" = transmission_ui("transmission"),
+          "Distribution" = distribution_ui("distribution"),
+          "Supply"       = supply_ui("supply"),
+          div(h2("Unknown page"), p("No content defined."))
+        )
+      )
+    }
+  })
+  
+  diagram_server("diagram", state = state)
+  generation_server("generation", state = state)
+  transmission_server("transmission", state = state)
+  distribution_server("distribution", state = state)
+  supply_server("supply", state = state)
+  
+  observeEvent(input$go_back, {
+    state$view <- "home"
+    state$selected_page <- NULL
+  })
+  
+  observeEvent(input$diagram_click, {
+    req(input$diagram_click)
+    valid_tabs <- c("Generation", "Transmission", "Distribution", "Supply")
+    if (input$diagram_click %in% valid_tabs) {
+      state$selected_page <- input$diagram_click
+      state$view <- "page"
+    }
+  })
+  
+  # ==== Renewable Simulation Logic (from app.R) ====
+  # Observer to switch tabs
+  observeEvent(input$switch_to_flow, {
+    updateNavbarPage(session, "main_nav", selected = "energy_flow_tab")
+  })
+  
+  # Placeholder for renewable simulation logic
+  # To complete: Copy all server logic from app.R (lines 734-1637) here
+  # Full Renewable Simulation Server Logic from app.R
+
+# server <- function(input, output, session) {
   
   #Offshore ----
   
@@ -1061,7 +1219,6 @@ server <- function(input, output, session) {
                                         prob = c(transition_probs()$prob [transition_probs()$from == broad_status],
                                                  1-transition_probs()$prob [transition_probs()$from == broad_status]),
                                         size = 1)) |> 
-
       mutate(
         passed_connection_time = (get_empirical_time(pipeline,tech,broad_status)),
         passed_connection_time_wk = as.numeric(passed_connection_time, units = 'weeks' ) ,#(60*60*24*7),
@@ -1166,7 +1323,7 @@ server <- function(input, output, session) {
         'tech',
         broad_status)
     
-      
+    
     splitting_criteria <- current_projects$broad_status
     
     list_statuses_original <- current_projects %>%
@@ -1489,6 +1646,8 @@ server <- function(input, output, session) {
       
       #req(simulation_results$forward_projects_outcome_cumulative)
       
+      print('hello')
+      
       preplanning_cumulative_echart(forward_projects_outcome_cumulative())
       
     })
@@ -1550,11 +1709,10 @@ observe({
   
   offshore_wind_target_date <- offshore_wind_df() |>
     filter(year(finished) == year(target_date)) |>
-    pull(mean)|> 
-      sum() |> 
+    pull(mean)|>
+      sum() |>
       magrittr::multiply_by(1000*12)
 
-  
   offshore_wind_end_date <- offshore_wind_df()|>
     filter(year(finished) == year(max(finished))) |>
     pull(mean)|> 
@@ -1615,14 +1773,8 @@ observe({
   
   target_pct = round((total_new_res_target_date + existing_res_target_date)/TER_target_date)
   
-  target_status_words_target_date = ifelse(target_pct >= 0.8, 'on track', ifelse(target_pct >= 0.75, 'slightly behind', 'significantly behind'))
-  target_status_color_target_date = ifelse(target_pct >= 0.8, 'green', ifelse(target_pct >= 0.75, 'orange', 'red'))
-
-
-  output$pct_2030 <- renderText({
-
-  })
-
+  target_status_words_target_date = ifelse(target_pct >= 0.8, 'on track', ifelse(target_pct >= 0.7, 'slightly behind', 'significantly behind'))
+  target_status_color_target_date = ifelse(target_pct >= 0.8, 'green', ifelse(target_pct >= 0.7, 'orange', 'red'))
 
   output$pct_2030 <- renderText({
 
@@ -1632,5 +1784,8 @@ observe({
   
 }
 
-# Run app
-shinyApp(ui = ui, server = server)
+
+shinyApp(ui, server)
+
+
+
