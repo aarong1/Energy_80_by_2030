@@ -1,3 +1,12 @@
+library(shiny)
+library(bslib)
+library(lubridate)
+library(tidyverse)
+library(future)
+library(promises)
+library(memoise)
+library(digest)
+library(echarts4r)
 
 #ui
 f <- function(p){format(big.mark=',',round(p))}
