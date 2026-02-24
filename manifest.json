@@ -4408,6 +4408,9 @@
     "AIRAA.txt": {
       "checksum": "6fd804d54517818deb7a542f2d453b18"
     },
+    "app_aaron.R": {
+      "checksum": "e711ad7b04e282acddd9e90992f73661"
+    },
     "app_enhanced.R": {
       "checksum": "cfd93032071229ecc6555a07f429ee52"
     },
@@ -4418,13 +4421,13 @@
       "checksum": "2acea8744cc5ceb2481094e2a1d770c5"
     },
     "app.R": {
-      "checksum": "e711ad7b04e282acddd9e90992f73661"
-    },
-    "app1_combined.R": {
-      "checksum": "c79199083ce5653dc75d6b47c4fd602d"
+      "checksum": "51347138eca239eb3b657c9fdecba645"
     },
     "app1.R": {
       "checksum": "4bf4c191066862be6109ff94165c12b7"
+    },
+    "augment.R": {
+      "checksum": "62522dd4c193521edfaf0fceddeef8a2"
     },
     "Aurora_report.txt": {
       "checksum": "6fd804d54517818deb7a542f2d453b18"
@@ -4433,10 +4436,10 @@
       "checksum": "6b6f94151022d32382b1eb9ab76f0856"
     },
     "components/sticky_side_bar.R": {
-      "checksum": "cef4dcb9c7df1732e2ebfb5e9a3f5046"
+      "checksum": "e83fa1ecc2d2e26c34c6f89b95674e0a"
     },
     "current_projects_projected_forward.csv": {
-      "checksum": "a0425b85b0f5dbf7f30f470de4bccbcd"
+      "checksum": "ee304d5854c1750f2516ff9f1511cf93"
     },
     "curve_to_click/click_forecast_anchor_fixed.js": {
       "checksum": "0d0d0c5147788247bddfa1a10b645ec7"
@@ -4480,6 +4483,9 @@
     "data/Subnational_total_final_consumption_2005_2022.xlsx": {
       "checksum": "040c86f727200dd2999bff9cb81fb349"
     },
+    "energy_grade5_24_02_26.key": {
+      "checksum": "558a9e4b64945dcff1a268b0c0f6a572"
+    },
     "energy_reports.pages": {
       "checksum": "798c1c5c49ff8ace0e3c1bce5159b1a6"
     },
@@ -4489,11 +4495,8 @@
     "expt_improved_forecasting.R": {
       "checksum": "8bed9c431a0e5e3e08d6daea4c525a09"
     },
-    "forward_projects_outcome_first.csv": {
-      "checksum": "8cbd1af1f7b9489dde1aa0ef44da91c7"
-    },
     "forward_projects.csv": {
-      "checksum": "b419d42f093cd1f1b05742aeb8e19ccf"
+      "checksum": "e54a51f34e50c174a9f72593a42c83a6"
     },
     "general_analysis_page.R": {
       "checksum": "58d89ae740f1ce3adab1a3ee83a9c667"
@@ -4541,7 +4544,7 @@
       "checksum": "25c829902472bd8b6e0d46dee9c1d086"
     },
     "R/mod_generation.R": {
-      "checksum": "e7d95b019d9aca729083b062d680c907"
+      "checksum": "ee3e8c3c93b8e4978696597191e4c926"
     },
     "R/mod_supply.R": {
       "checksum": "a4d566bfa21729b91cc6dec5c12a3698"
@@ -4590,9 +4593,6 @@
     },
     "resources/TES-2023-Final-Full-Report.pdf": {
       "checksum": "3e5a3b68498f5a2f5bd941ff453f7c8b"
-    },
-    "temp1.csv": {
-      "checksum": "d4071863cae725e6f190f32cb76def6d"
     },
     "test_applications/app_brite.R": {
       "checksum": "ef820183c405e8413836e562402d5747"
