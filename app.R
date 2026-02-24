@@ -13,8 +13,13 @@ options(shiny.devmode = TRUE)
 target_date = '2030-01-01'
 end_date = '2032-01-01'
 
+mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
+                              to = as.Date(end_date),
+                              by = 1 ), 'month')
+)
+
 load('init_vars.RData')
-f <- function(p){format(big.mark=',',round(p))}
+f <- function(p){ format(big.mark=',',round(p)) }
 
 # Helper function to get slider value
 getSliderValue <- function(inputValue, defaultValue) {
@@ -716,7 +721,7 @@ ui <- navbarPage(
              # Loading overlay - centered and doesn't affect layout
              div(id= 'loading', 
                  class = 'alert alert-danger rounded-3 p-3',
-                 style = 'position:fixed;top:5%;left:90%;transform:translate(-50%,-50%);z-index:9999;opacity:1;display:none;box-shadow:0 4px 6px rgba(0,0,0,0.3);',
+                 style = 'position:fixed;top:15%;left:90%;transform:translate(-50%,-50%);z-index:9999;opacity:1;display:none;box-shadow:0 4px 6px rgba(0,0,0,0.3);',
                  div(class='d-flex gap-3 align-items-center',
                      span(class="loader"),
                      
@@ -828,7 +833,8 @@ server <- function(input, output, session) {
   # ==== Energy Flow Diagram Logic (original app1.R) ====
   state <- reactiveValues(
     view = "home",            
-    selected_page = NULL    
+    selected_page = NULL,
+    renewables_run = NULL
   )
   
   output$main_ui <- renderUI({
@@ -844,9 +850,7 @@ server <- function(input, output, session) {
                             paste(state$selected_page, 'Targets, Improvement and Projections'),#br(),
                             p(class = 'lead d-inline',"80% by 2030")
                      )
-      
                  )
-
             ),
         switch(
           state$selected_page,
@@ -1139,6 +1143,8 @@ server <- function(input, output, session) {
     
   
   observeEvent(input$submit, { 
+    
+    state$renewables_run = date()
     print('Start Run1')
     
       session$sendCustomMessage("toggleLoadingBtn", "show")

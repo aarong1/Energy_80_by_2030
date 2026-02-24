@@ -1,9 +1,13 @@
 
 #ui
 f <- function(p){format(big.mark=',',round(p))}
+mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
+                              to = as.Date(end_date),
+                              by = 1 ), 'month')
+)
 
 generation_ui <- function(id) {
-  ns <- NS(id)
+  ns <<- NS(id)
   
   tagList(
   #     tags$nav(class = "navbar navbar-expand-lg glass-card rounded-0 p-2 fixed-top", #  bg-white
@@ -326,10 +330,10 @@ br(),br(),
                         `aria-label` = "Scenario selection",
                         tags$input(
                           type = "radio",
-                          class = "btn-check shiny-input-radiogroup",
+                          class = "btn-check shiny-input-radiogroup shiny-input-bound",
                           name = ns("scenario_input_choice"),
                           id = ns("policy_simulation"),
-                          value = "worst",
+                          value = 'policy_simulation',
                           autocomplete = "off"
                         ),
                         tags$label(
@@ -342,7 +346,7 @@ br(),br(),
                           class = "btn-check shiny-input-radiogroup",
                           name = ns("scenario_input_choice"),
                           id = ns("forecasts"),
-                          value = "forecasts",
+                          value = 'forecasts',
                           checked = "checked",
                           autocomplete = "off"
                         ),
@@ -370,77 +374,12 @@ br(),br(),
               ", ns("scenario_input_choice"))))
             
           ),
-          card(
-            class = "shadow-sm border-0 rounded-3",
-            card_header(
-              class = "bg-white  h5 fw-bolder p-3",
-              "Scenario Configuration"
-            ),
-            card_body(class = 'p-3',
-              tags$label("Select Scenario for renewables:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
-              div(
-                class = "btn-group ",
-                role = "group",
-                `aria-label` = "Scenario selection",
-                tags$input(
-                  type = "radio",
-                  class = "btn-check shiny-input-radiogroup",
-                  name = ns("scenario_choice"),
-                  id = ns("scenario_worst"),
-                  value = "worst",
-                  autocomplete = "off"
-                ),
-                tags$label(
-                  class = "btn btn-outline-danger opacity-75",
-                  `for` = ns("scenario_worst"),
-                  "Pessimistic case"
-                ),
-                tags$input(
-                  type = "radio",
-                  class = "btn-check shiny-input-radiogroup",
-                  name = ns("scenario_choice"),
-                  id = ns("scenario_medium"),
-                  value = "medium",
-                  checked = "checked",
-                  autocomplete = "off"
-                ),
-                tags$label(
-                  class = "btn btn-outline-warning opacity-75",
-                  `for` = ns("scenario_medium"),
-                  "Medium case"
-                ),
    
-                tags$input(
-                  type = "radio",
-                  class = "btn-check shiny-input-radiogroup",
-                  name = ns("scenario_choice"),
-                  id = ns("scenario_best"),
-                  value = "best",
-                  autocomplete = "off"
-                ),
-                tags$label(
-                  class = "btn btn-outline-success opacity-75",
-                  `for` = ns("scenario_best"),
-                  "Optimum case"
-                )
-              ),
-              tags$script(HTML(sprintf("
-                $(document).ready(function() {
-                  var radioName = '%s';
-                  $('input[name=\"' + radioName + '\"]').on('change', function() {
-                    if (this.checked) {
-                      Shiny.setInputValue(radioName, this.value);
-                    }
-                  });
-                  // Set initial value
-                  var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
-                  if (checkedRadio.length > 0) {
-                    Shiny.setInputValue(radioName, checkedRadio.val());
-                  }
-                });
-              ", ns("scenario_choice"))))
-            )
-          )
+  
+           uiOutput(fill = T,ns('selection_dependent'))
+           
+            
+          
         )
         ),
         
@@ -616,15 +555,175 @@ br(),br(),
         h3("Historical Dispatch Down (Wind & Solar)"),
         plotOutput(ns("dd_history_plot"), height = "350px"),
         tags$hr(),
-
   
       )
-    ) 
+    )
 }
 
 #server
 generation_server <- function(id, state) {
   moduleServer(id, function(input, output, session) {
+    
+    new_renewables_reactive <- reactive({
+      state$renewables_run
+      offshore_wind <- read.csv('offshore_wind.csv')
+      forward_projects <- read.csv('forward_projects.csv')
+      # forward_projects_outcome_first <- read.csv('forward_projects_outcome_first.csv')
+      current_projects_projected_forward <- read.csv('current_projects_projected_forward.csv')
+      
+      params = list()
+      params$number_runs = max(forward_projects$run)
+      
+      z <- bind_rows(
+        current_projects_projected_forward,
+        forward_projects)|> #View()
+        filter(passed_planning &
+                 passed_connection &
+                 passed_construction) |> 
+        mutate(finished = #format(passed_construction_date, format = '%Y-%m')) |> 
+                 floor_date( as.Date(passed_construction_date),'month')) |> 
+        group_by(finished, 
+                 tech, 
+                 run) |> 
+        summarise(MW = sum(`Installed.Capacity..MWelec.`,na.rm = T),
+                  no_proj = n()) |> 
+        ungroup() %>% 
+        left_join(expand.grid(
+          finished = mons,
+          tech = unique(.$tech),
+          run = 1:params$number_runs),.
+        ) |> 
+        replace_na(replace = list(MW = 0, no_proj = 0)) |> 
+        arrange(finished) %>% 
+        group_by(finished, 
+                 tech) |> 
+        summarise(MW = mean(`MW`,na.rm = T),
+                  no_proj = mean(n))
+      
+      
+      q <- offshore_wind %>% 
+        mutate(finished = as.Date(finished)) %>% 
+        mutate(tech = 'Wind Offshore') %>% 
+        left_join(expand.grid(
+          finished = mons,
+          tech = unique(.$tech)),.
+        ) %>% 
+        replace_na(replace = list( MW = 0, no_proj = 0)) %>% 
+        mutate(cumMW = mean*1000)
+      
+      
+      
+      # q <- q %>% 
+      #   mutate(cumMW = ifelse(finished>'2028-04-01',500,0)) %>% 
+      #   mutate(finished = as.Date(finished))
+      
+      z <- z %>% 
+        group_by(tech) %>% 
+        arrange(finished) %>% 
+        mutate(cumMW = cumsum(MW))
+      
+      z <- z %>% 
+        bind_rows(.,q) %>%
+        mutate(finished = as.Date(finished)) %>% 
+        arrange(tech) %>% 
+        ungroup() %>% 
+        mutate(tech = factor(tech, levels = c('Solar Photovoltaics', 'Wind Onshore', 'Wind Offshore'))) 
+
+   z
+      })
+    
+    output$selection_dependent <- renderUI({
+      
+
+      if(input$`scenario_input_choice`=='policy_simulation'){
+        new_renewables_reactive() %>%   
+          filter(finished<'2033-01-01') %>% 
+          group_by(tech) %>% 
+          e_charts(finished,height='200px') %>%
+          e_grid(right='23%', bottom='0%',top ='0%') %>% 
+          e_area(cumMW,stack = 'd', endLabel = list(show = T,color = 'lightgrey', formatter = '{a}'),
+                 lineStyle = list(color='white',opacity = 1,symbol = 'none'), 
+                 itemStyle = list(opacity = 1),symbol = 'none',legend=F) %>% 
+          e_color(c('yellow', 'steelblue','cyan')) %>% 
+          e_y_axis(name = 'MW') %>%
+          e_tooltip(trigger='axis') %>% 
+          e_theme('walden')
+        
+      }else
+        {
+    div(
+      card(
+        class = "shadow-sm border-0 rounded-3",
+      card_header(
+        class = "bg-white  h5 fw-bolder p-3",
+        "Scenario Configuration"
+      ),
+      card_body(class = 'p-3',
+    tags$label("Select Scenario for renewables:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
+    div(
+      class = "btn-group ",
+      role = "group",
+      `aria-label` = "Scenario selection",
+      tags$input(
+        type = "radio",
+        class = "btn-check shiny-input-radiogroup",
+        name = session$ns("scenario_choice"),
+        id = session$ns("scenario_worst"),
+        value = "worst",
+        autocomplete = "off"
+      ),
+      tags$label(
+        class = "btn btn-outline-danger opacity-75",
+        `for` = session$ns("scenario_worst"),
+        "Pessimistic case"
+      ),
+      tags$input(
+        type = "radio",
+        class = "btn-check shiny-input-radiogroup",
+        name = session$ns("scenario_choice"),
+        id = session$ns("scenario_medium"),
+        value = "medium",
+        checked = "checked",
+        autocomplete = "off"
+      ),
+      tags$label(
+        class = "btn btn-outline-warning opacity-75",
+        `for` = session$ns("scenario_medium"),
+        "Medium case"
+      ),
+      
+      tags$input(
+        type = "radio",
+        class = "btn-check shiny-input-radiogroup",
+        name = session$ns("scenario_choice"),
+        id = session$ns("scenario_best"),
+        value = "best",
+        autocomplete = "off"
+      ),
+      tags$label(
+        class = "btn btn-outline-success opacity-75",
+        `for` = session$ns("scenario_best"),
+        "Optimum case"
+      )
+    ),
+    tags$script(HTML(sprintf("
+                $(document).ready(function() {
+                  var radioName = '%s';
+                  $('input[name=\"' + radioName + '\"]').on('change', function() {
+                    if (this.checked) {
+                      Shiny.setInputValue(radioName, this.value);
+                    }
+                  });
+                  // Set initial value
+                  var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
+                  if (checkedRadio.length > 0) {
+                    Shiny.setInputValue(radioName, checkedRadio.val());
+                  }
+                });
+              ", session$ns("scenario_choice"))))
+    )))
+      }
+  })
 
 #---daily and monthly SNSP (historical data)
     prediction_schedule <- tibble::tibble(
@@ -1445,6 +1544,22 @@ generation_server <- function(id, state) {
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
                                      `Generated RES` + 900,
                                      `Generated RES`)
+          )
+      }
+      if (isTRUE(input$`scenario_input_choice`=='policy_simulation')) {
+        
+        print(names(df_all))
+        print(names(new_renewables_reactive()))
+        
+        new_renewables_wider <- pivot_wider(new_renewables_reactive(),
+                                            id_cols = finished, 
+                                           names_from = tech, 
+                                           values_from = cumMW) 
+        
+        df_all <- df_all %>%
+          left_join(new_renewables_wider,by = c('date'='finished')) %>% 
+          mutate(
+            `Generated RES` = `Generated RES` + `Wind Onshore` + `Wind Offshore` + `Solar Photovoltaics`
           )
       }
       
