@@ -1,6 +1,6 @@
 # Combined Energy Planning Dashboard
 
-
+print('e')
 library(shiny)
 library(bslib)
 library(lubridate)
@@ -12,7 +12,7 @@ library(digest)
 library(echarts4r)
 
 # Load renewable simulation sources
-options(shiny.devmode = TRUE)
+options(shiny.devmode = FALSE)
 target_date = '2030-01-01'
 end_date = '2032-01-01'
 

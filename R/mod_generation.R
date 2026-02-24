@@ -7,13 +7,20 @@ library(promises)
 library(memoise)
 library(digest)
 library(echarts4r)
-
+print('f')
 #ui
 f <- function(p){format(big.mark=',',round(p))}
+
+target_date = '2030-01-01'
+end_date = '2032-01-01'
+
 mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
                               to = as.Date(end_date),
                               by = 1 ), 'month')
 )
+
+
+
 
 generation_ui <- function(id) {
   ns <<- NS(id)
