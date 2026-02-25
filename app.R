@@ -12,7 +12,7 @@ library(digest)
 library(echarts4r)
 
 # Load renewable simulation sources
-options(shiny.devmode = FALSE)
+options(shiny.devmode = TRUE)
 target_date = '2030-01-01'
 end_date = '2032-01-01'
 
@@ -239,11 +239,17 @@ ui <- navbarPage(
                                  )
                          )
                      ),
+                     
+                     div(class = 'btn-group',
                      actionButton(inputId = 'submit', 
                                   label = tagList(icon("play"), " Run Simulation"),
                                   class = "btn btn-primary",
                                   style = "white-space: nowrap;"),
-                 )
+                     actionButton(inputId = 'submit', 
+                                  label = tagList(icon("arrow-up-right-from-square"), " Take state"),
+                                  class = "btn btn-primary",
+                                  style = "white-space: nowrap;"),
+                 ))
              ),
              
              # Add spacing to prevent overlap
