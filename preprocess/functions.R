@@ -26,48 +26,82 @@ get_train_label <- function(var, val_year, min_date) {
   }
 }
 
+# plot_fc <- function(res, target) {
+#   hist <- res$history %>% rename(value = all_of(target))
+#   fc   <- res$forecast
+#   
+#   ggplot() +
+#     geom_line(data = hist, aes(x = date, y = value), color = "grey25", linewidth = 0.7) +
+#     geom_ribbon(data = fc, aes(x = date, ymin = lo_95, ymax = hi_95),
+#                 fill = "#9ecae1", alpha = 0.35) +
+#     geom_ribbon(data = fc, aes(x = date, ymin = lo_80, ymax = hi_80),
+#                 fill = "#3182bd", alpha = 0.35) +
+#     geom_line(data = fc, aes(x = date, y = pred), color = "#08519c", linewidth = 1.2) +
+#     labs(
+#       title = paste("XGBoost Forecast:", nice_names[[target]]),
+#       subtitle = paste0(
+#         get_train_label(target, val_year, min_date <- 
+#                           if (target %in% c("sum_import","sum_export")) {
+#                             "2022-01-01"
+#                           } else if (target %in% c("sum_solar","sum_avai_solar")) {
+#                             "2018-01-01"
+#                           } else {
+#                             NULL
+#                           }),
+#         " | Valid: ", val_year,
+#         " | Horizon: ", h, " months"
+#       ),
+#       x = "Date", y = nice_names[[target]],
+#       caption = "Bands: 80% (inner) and 95% (outer) via residual bootstrap"
+#     ) +
+#     theme_minimal(base_size = 14) +
+#     theme(panel.grid.minor = element_blank()) +
+#     scale_x_date(
+#       date_breaks = "3 month",
+#       date_labels = "%b %Y"
+#     ) + 
+#     theme(
+#       axis.text.x = element_text(
+#         angle = 90,
+#         vjust = 0.5,
+#         hjust = 1
+#       ))
+#       
+#   
+# }
+
 plot_fc <- function(res, target) {
-  hist <- res$history %>% rename(value = all_of(target))
-  fc   <- res$forecast
+  hist <- res$history %>% rename(value=all_of(target))
+  fc <- res$forecast
   
   ggplot() +
-    geom_line(data = hist, aes(x = date, y = value), color = "grey25", linewidth = 0.7) +
-    geom_ribbon(data = fc, aes(x = date, ymin = lo_95, ymax = hi_95),
-                fill = "#9ecae1", alpha = 0.35) +
-    geom_ribbon(data = fc, aes(x = date, ymin = lo_80, ymax = hi_80),
-                fill = "#3182bd", alpha = 0.35) +
-    geom_line(data = fc, aes(x = date, y = pred), color = "#08519c", linewidth = 1.2) +
-    labs(
-      title = paste("XGBoost Forecast:", nice_names[[target]]),
-      subtitle = paste0(
-        get_train_label(target, val_year, min_date <- 
-                          if (target %in% c("sum_import","sum_export")) {
-                            "2022-01-01"
-                          } else if (target %in% c("sum_solar","sum_avai_solar")) {
-                            "2018-01-01"
-                          } else {
-                            NULL
-                          }),
-        " | Valid: ", val_year,
-        " | Horizon: ", h, " months"
-      ),
-      x = "Date", y = nice_names[[target]],
-      caption = "Bands: 80% (inner) and 95% (outer) via residual bootstrap"
-    ) +
-    theme_minimal(base_size = 14) +
-    theme(panel.grid.minor = element_blank()) +
-    scale_x_date(
-      date_breaks = "3 month",
-      date_labels = "%b %Y"
-    ) + 
-    theme(
-      axis.text.x = element_text(
-        angle = 90,
-        vjust = 0.5,
-        hjust = 1
-      ))
-      
+    geom_line(data=hist, aes(date,value), color="grey25", linewidth=0.7) +
+    geom_ribbon(data=fc, aes(date, ymin=lo_95, ymax=hi_95),
+                fill="#9ecae1", alpha=0.35) +
+    geom_ribbon(data=fc, aes(date, ymin=lo_80, ymax=hi_80),
+                fill="#3182bd", alpha=0.35) +
+    geom_line(data=fc, aes(date,pred), color="#08519c", linewidth=1.2) +
+    labs(title=paste("XGBoost Forecast:", nice_names[[target]]),
+         subtitle=paste("Training: 2014 - 2025"),
+         x="Date", y=nice_names[[target]]) +
+    theme_minimal(14)
+}
+
+plot_fc_last3 <- function(res, target) {
+  hist <- res$history %>% rename(value=all_of(target))
+  fc <- res$forecast
   
+  ggplot() +
+    geom_line(data=hist, aes(date,value), color="grey25", linewidth=0.7) +
+    geom_ribbon(data=fc, aes(date, ymin=lo_95, ymax=hi_95),
+                fill="#e5989b", alpha=0.35) +
+    geom_ribbon(data=fc, aes(date, ymin=lo_80, ymax=hi_80),
+                fill="#b56576", alpha=0.35) +
+    geom_line(data=fc, aes(date,pred), color="#6d597a", linewidth=1.2) +
+    labs(title=paste("XGBoost Forecast:", nice_names[[target]]),
+         subtitle=paste("Training: 2023 - 2025"),
+         x="Date", y=nice_names[[target]]) +
+    theme_minimal(14)
 }
 
 run_lm_forecast <- function(monthly_df, target, val_year, h, min_train_date = NULL) {
@@ -183,6 +217,7 @@ monthly_df <- combined_df %>%
     sum_wind    = if ("sum_wind" %in% vars)    agg_fun(sum_wind,    na.rm = TRUE) else NULL,
     sum_avai_solar    = if ("sum_avai_solar" %in% vars)    agg_fun(sum_avai_solar,    na.rm = TRUE) else NULL,
     sum_avai_wind = if ("sum_avai_wind" %in% vars) agg_fun(sum_avai_wind, na.rm = TRUE) else NULL,
+    sum_system_gen.y  = if ("sum_system_gen.y" %in% vars) agg_fun(sum_system_gen.y,  na.rm = TRUE),
     .groups = "drop"
   ) %>%
   mutate(date = as.Date(sprintf("%04d-%02d-01", year, month))) %>%
@@ -215,34 +250,62 @@ make_supervised <- function(df, target, max_lag = 12, roll_windows = c(3,6,12)) 
   out
 }
 
+# build_matrices <- function(df_sup, target, val_year) {
+#   df_sup <- df_sup %>% filter(complete.cases(.))
+# 
+#   idx_train <- which(lubridate::year(df_sup$date) <  val_year)
+#   idx_valid <- which(lubridate::year(df_sup$date) == val_year)
+# 
+#   if (length(idx_train) == 0) stop("No training rows before val_year = ", val_year)
+#   if (length(idx_valid) == 0) stop("No validation rows in val_year = ", val_year,
+#                                    ". Pick a different val_year or ensure data covers it.")
+# 
+#   feats <- grep("^(month|sin12|cos12|lag_|rollmean_)", names(df_sup), value = TRUE)
+# 
+#   dtrain <- xgb.DMatrix(
+#     data = as.matrix(df_sup[idx_train, feats, drop = FALSE]),
+#     label = df_sup[[target]][idx_train]
+#   )
+# 
+#   dvalid <- xgb.DMatrix(
+#     data = as.matrix(df_sup[idx_valid, feats, drop = FALSE]),
+#     label = df_sup[[target]][idx_valid]
+#   )
+# 
+#   list(
+#     dtrain = dtrain,
+#     dvalid = dvalid,
+#     feats  = feats,
+#     train_df = df_sup[idx_train, , drop = FALSE],
+#     valid_df = df_sup[idx_valid, , drop = FALSE]
+#   )
+# }
+
 build_matrices <- function(df_sup, target, val_year) {
   df_sup <- df_sup %>% filter(complete.cases(.))
-
-  idx_train <- which(lubridate::year(df_sup$date) <  val_year)
-  idx_valid <- which(lubridate::year(df_sup$date) == val_year)
-
-  if (length(idx_train) == 0) stop("No training rows before val_year = ", val_year)
-  if (length(idx_valid) == 0) stop("No validation rows in val_year = ", val_year,
-                                   ". Pick a different val_year or ensure data covers it.")
-
+  idx_train <- which(year(df_sup$date) < val_year)
+  idx_valid <- which(year(df_sup$date) == val_year)
+  
   feats <- grep("^(month|sin12|cos12|lag_|rollmean_)", names(df_sup), value = TRUE)
+  
+  dtrain <- xgb.DMatrix(as.matrix(df_sup[idx_train, feats]), label=df_sup[[target]][idx_train])
+  dvalid <- xgb.DMatrix(as.matrix(df_sup[idx_valid, feats]), label=df_sup[[target]][idx_valid])
+  
+  list(dtrain=dtrain, dvalid=dvalid, feats=feats,
+       train_df=df_sup[idx_train,], valid_df=df_sup[idx_valid,])
+}
 
-  dtrain <- xgb.DMatrix(
-    data = as.matrix(df_sup[idx_train, feats, drop = FALSE]),
-    label = df_sup[[target]][idx_train]
+# 5) Fit XGB
+fit_xgb <- function(dtrain, dvalid, params=list(), nrounds=5000, early_stopping_rounds=100) {
+  default_params <- list(
+    objective="reg:squarederror", eval_metric="rmse",
+    max_depth=6, eta=0.03, subsample=0.8, colsample_bytree=0.8, min_child_weight=5
   )
-
-  dvalid <- xgb.DMatrix(
-    data = as.matrix(df_sup[idx_valid, feats, drop = FALSE]),
-    label = df_sup[[target]][idx_valid]
-  )
-
-  list(
-    dtrain = dtrain,
-    dvalid = dvalid,
-    feats  = feats,
-    train_df = df_sup[idx_train, , drop = FALSE],
-    valid_df = df_sup[idx_valid, , drop = FALSE]
+  params <- modifyList(default_params, params)
+  xgb.train(
+    params=params, data=dtrain, nrounds=nrounds,
+    watchlist=list(train=dtrain, valid=dvalid),
+    early_stopping_rounds=early_stopping_rounds
   )
 }
 
@@ -272,58 +335,102 @@ fit_xgb <- function(dtrain, dvalid, params = list(), nrounds = 5000, early_stopp
   )
 }
 
+# forecast_iterative <- function(model, last_hist_df, target, feats, horizon, max_lag, roll_windows) {
+#   hist <- last_hist_df %>% arrange(date)
+#   last_date <- max(hist$date)
+# 
+#   future <- data.frame()
+#   preds  <- numeric(horizon)
+# 
+#   work <- hist
+# 
+#   for (i in 1:horizon) {  
+#     next_date <- as.Date(seq(last_date, by = "month", length.out = 2)[2])
+# 
+#     base_row <- data.frame(date = next_date) %>% add_time_features() %>%
+#       mutate(!!target := NA_real_) %>%
+#       select(date, month, sin12, cos12, all_of(target))
+# 
+#     work_min <- work %>%
+#       select(date, month, sin12, cos12, all_of(target),
+#              starts_with("lag_"), starts_with("rollmean_"))
+# 
+#     tmp <- dplyr::bind_rows(work_min, base_row)
+# 
+#     for (L in 1:max_lag) {
+#       tmp[[paste0("lag_", L)]] <- dplyr::lag(tmp[[target]], n = L)
+#     }
+# 
+#     lag1 <- dplyr::lag(tmp[[target]], n = 1)
+#     for (w in roll_windows) {
+#       tmp[[paste0("rollmean_", w)]] <- zoo::rollapply(
+#         lag1, width = w, FUN = mean, align = "right", fill = NA, partial = FALSE
+#       )
+#     }
+# 
+#     xrow <- tmp %>% slice(dplyr::n()) %>% select(all_of(feats))
+# 
+#     if (anyNA(xrow)) {
+#       last_non_na <- work %>% slice(dplyr::n()) %>% select(all_of(feats))
+#       nas <- which(is.na(xrow))
+#       xrow[nas] <- last_non_na[nas]
+#     }
+# 
+#     dmat <- xgb.DMatrix(as.matrix(xrow))
+#     yhat <- as.numeric(predict(model, dmat))
+#     preds[i] <- yhat
+# 
+#     tmp[nrow(tmp), target] <- yhat
+#     work <- tmp
+# 
+#     future <- dplyr::bind_rows(future, data.frame(date = next_date, pred = yhat))
+#     last_date <- next_date
+#   }
+# 
+#   future
+# }
+
 forecast_iterative <- function(model, last_hist_df, target, feats, horizon, max_lag, roll_windows) {
   hist <- last_hist_df %>% arrange(date)
   last_date <- max(hist$date)
-
   future <- data.frame()
-  preds  <- numeric(horizon)
-
+  preds <- numeric(horizon)
   work <- hist
-
-  for (i in 1:horizon) {  
-    next_date <- as.Date(seq(last_date, by = "month", length.out = 2)[2])
-
-    base_row <- data.frame(date = next_date) %>% add_time_features() %>%
+  
+  for (i in 1:horizon) {
+    next_date <- seq(last_date, by="month", length.out=2)[2]
+    
+    base_row <- data.frame(date=next_date) %>%
+      add_time_features() %>%
       mutate(!!target := NA_real_) %>%
       select(date, month, sin12, cos12, all_of(target))
-
+    
     work_min <- work %>%
-      select(date, month, sin12, cos12, all_of(target),
-             starts_with("lag_"), starts_with("rollmean_"))
-
-    tmp <- dplyr::bind_rows(work_min, base_row)
-
-    for (L in 1:max_lag) {
-      tmp[[paste0("lag_", L)]] <- dplyr::lag(tmp[[target]], n = L)
-    }
-
-    lag1 <- dplyr::lag(tmp[[target]], n = 1)
-    for (w in roll_windows) {
-      tmp[[paste0("rollmean_", w)]] <- zoo::rollapply(
-        lag1, width = w, FUN = mean, align = "right", fill = NA, partial = FALSE
-      )
-    }
-
-    xrow <- tmp %>% slice(dplyr::n()) %>% select(all_of(feats))
-
+      select(date, month, sin12, cos12, all_of(target), starts_with("lag_"), starts_with("rollmean_"))
+    tmp <- bind_rows(work_min, base_row)
+    
+    for (L in 1:max_lag) tmp[[paste0("lag_", L)]] <- lag(tmp[[target]], n = L)
+    
+    lag1 <- lag(tmp[[target]], 1)
+    for (w in roll_windows)
+      tmp[[paste0("rollmean_", w)]] <- zoo::rollapply(lag1, w, mean, align="right", fill=NA)
+    
+    xrow <- tmp %>% slice(n()) %>% select(all_of(feats))
     if (anyNA(xrow)) {
-      last_non_na <- work %>% slice(dplyr::n()) %>% select(all_of(feats))
+      last_non_na <- work %>% slice(n()) %>% select(all_of(feats))
       nas <- which(is.na(xrow))
       xrow[nas] <- last_non_na[nas]
     }
-
-    dmat <- xgb.DMatrix(as.matrix(xrow))
-    yhat <- as.numeric(predict(model, dmat))
+    
+    yhat <- as.numeric(predict(model, xgb.DMatrix(as.matrix(xrow))))
     preds[i] <- yhat
-
+    
     tmp[nrow(tmp), target] <- yhat
     work <- tmp
-
-    future <- dplyr::bind_rows(future, data.frame(date = next_date, pred = yhat))
+    
+    future <- bind_rows(future, data.frame(date=next_date, pred=yhat))
     last_date <- next_date
   }
-
   future
 }
 
@@ -348,38 +455,63 @@ bootstrap_intervals <- function(point_fc, residuals, B = 1000, levels = c(0.80, 
   out
 }
 
-run_xgb_forecast <- function(monthly_df, target, val_year, h, max_lag, roll_windows,
-                             params = list(),
-                             min_train_date = NULL) {   
+# run_xgb_forecast <- function(monthly_df, target, val_year, h, max_lag, roll_windows,
+#                              params = list(),
+#                              min_train_date = NULL) {   
+# 
+#   base_full <- monthly_df %>%
+#     add_time_features() %>%
+#     select(date, month, sin12, cos12, all_of(target))
+# 
+#   if (!is.null(min_train_date)) {
+#     min_train_date <- as.Date(min_train_date)
+#     base <- base_full %>% filter(date >= min_train_date)
+#   } else {
+#     base <- base_full
+#   }
+# 
+#   sup <- make_supervised(base, target, max_lag = max_lag, roll_windows = roll_windows)
+#   mats <- build_matrices(sup, target, val_year = val_year)
+#   model <- fit_xgb(mats$dtrain, mats$dvalid, params = params)
+#   valid_pred <- predict(model, mats$dvalid)
+#   valid_df <- mats$valid_df %>%
+#     mutate(pred = as.numeric(valid_pred),
+#            resid = .data[[target]] - pred)
+# 
+#   last_hist <- sup %>% filter(complete.cases(.))
+#   future_pts <- forecast_iterative(model, last_hist, target, mats$feats, h, max_lag, roll_windows)
+#   fc_with_pi <- bootstrap_intervals(future_pts, valid_df$resid, B = 1000, levels = c(0.80, 0.95))
+# 
+#   list(
+#     model = model,
+#     valid = valid_df,
+#     forecast = fc_with_pi,
+#     history = monthly_df %>% select(date, all_of(target))
+#   )
+# }
 
+run_xgb_forecast <- function(monthly_df, target, val_year, h, max_lag, roll_windows,
+                             params=list(), min_train_date=NULL) {
   base_full <- monthly_df %>%
     add_time_features() %>%
     select(date, month, sin12, cos12, all_of(target))
-
-  if (!is.null(min_train_date)) {
-    min_train_date <- as.Date(min_train_date)
-    base <- base_full %>% filter(date >= min_train_date)
-  } else {
-    base <- base_full
-  }
-
-  sup <- make_supervised(base, target, max_lag = max_lag, roll_windows = roll_windows)
-  mats <- build_matrices(sup, target, val_year = val_year)
-  model <- fit_xgb(mats$dtrain, mats$dvalid, params = params)
+  
+  base <- if (!is.null(min_train_date)) base_full %>% filter(date >= as.Date(min_train_date)) else base_full
+  
+  sup <- make_supervised(base, target, max_lag=max_lag, roll_windows=roll_windows)
+  mats <- build_matrices(sup, target, val_year)
+  model <- fit_xgb(mats$dtrain, mats$dvalid, params=params)
+  
   valid_pred <- predict(model, mats$dvalid)
-  valid_df <- mats$valid_df %>%
-    mutate(pred = as.numeric(valid_pred),
-           resid = .data[[target]] - pred)
-
+  valid_df <- mats$valid_df %>% mutate(pred = valid_pred, resid = .data[[target]] - pred)
+  
   last_hist <- sup %>% filter(complete.cases(.))
   future_pts <- forecast_iterative(model, last_hist, target, mats$feats, h, max_lag, roll_windows)
-  fc_with_pi <- bootstrap_intervals(future_pts, valid_df$resid, B = 1000, levels = c(0.80, 0.95))
-
+  fc_with_pi <- bootstrap_intervals(future_pts, valid_df$resid, B=1000)
+  
   list(
-    model = model,
-    valid = valid_df,
-    forecast = fc_with_pi,
-    history = monthly_df %>% select(date, all_of(target))
+    model=model, valid=valid_df, forecast=fc_with_pi,
+    history=monthly_df %>% select(date, all_of(target))
   )
 }
 

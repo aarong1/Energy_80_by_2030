@@ -476,7 +476,7 @@ br(),br(),
         # ),
         
     
-      ),
+      
         
 #-------model-based predictions
         card(
@@ -572,6 +572,7 @@ br(),br(),
         plotOutput(ns("dd_history_plot"), height = "350px"),
         tags$hr(),
   
+      )
       )
     )
 }
@@ -1121,47 +1122,84 @@ generation_server <- function(id, state) {
         dev.off()
       }
     )
-
+   
 #---model-based predictions
     results <- local({
-      file <- "./data/results_all_vars.rda"
-      env <- new.env()
+      file <- "./data/results_xgb_all.rda"
+      env  <- new.env()
       load(file, envir = env)
-      env$results
+      env$results_full
     })
     
-    # results_lm <- list()
-    # for (v in vars) {
-    #   message("Fitting Linear model for: ", v)
-    #   min_date <- if (v %in% c("sum_import", "sum_export")) "2022-01-01" else NULL
-    #   
-    #   results_lm[[v]] <- run_lm_forecast(
-    #     monthly_df, target = v, val_year = val_year, h = h,
-    #     min_train_date = min_date
-    #   )
-    # }
+    results_last3 <- local({
+      file <- "./data/results_xgb_all.rda"
+      env  <- new.env()
+      load(file, envir = env)
+      env$results_last3
+    })
     
     output$all_forecast_plots <- renderUI({
-      plot_list <- lapply(names(results), function(varname) {
+      vars_full  <- if (!is.null(results)) names(results) else character(0)
+      vars_last3 <- if (!is.null(results_last3)) names(results_last3) else character(0)
+      varnames   <- union(vars_full, vars_last3)
+      
+      plot_list <- lapply(varnames, function(varname) {
+        
+        has_full  <- !is.null(results)       && !is.null(results[[varname]])
+        has_last3 <- !is.null(results_last3) && !is.null(results_last3[[varname]])
+        
         tagList(
-          plotOutput(session$ns(paste0("plot_xgb_", varname)), height = "350px"),
-          tags$br(),
+          h3(nice_names[[varname]] %||% varname, style = "margin-top:40px; color:#355070;"),
           
-          # h4("Linear Model Forecast"),
-          # plotOutput(session$ns(paste0("plot_lm_", varname)), height = "350px"),
-          # tags$hr()
+          div(
+            style = "display:flex; justify-content:space-between; font-weight:bold; margin-bottom:10px;",
+            div("Full Training (2014–2025)",  style="width:48%; text-align:center;"),
+            div("Training 2023–2025",         style="width:48%; text-align:center;")
+          ),
+          
+          div(
+            style = "
+        display:flex;
+        gap:20px;
+        border-bottom:1px solid #ccc;
+        padding-bottom:20px;
+        margin-bottom:30px;
+      ",
+            
+            div(
+              style = "width:48%;",
+              if (has_full) {
+                plotOutput(session$ns(paste0("plot_xgb_full_", varname)), height = '350px')
+              }
+            ),
+            
+            div(
+              style = "width:48%; border-left:1px solid #ddd; padding-left:20px;",
+              if (has_last3) {
+                plotOutput(session$ns(paste0("plot_xgb_last3_", varname)), height = '350px')
+              }
+            )
+          )
         )
       })
       
-      for (v in names(results)) {
+      
+      for (v in vars_full) {
         local({
           vn <- v
-          output[[paste0("plot_xgb_", vn)]] <- renderPlot({
+          output[[paste0("plot_xgb_full_", vn)]] <- renderPlot({
+            req(results[[vn]])
             plot_fc(results[[vn]], vn)
           })
-          
-          output[[paste0("plot_lm_", vn)]] <- renderPlot({
-            plot_fc_lm(results_lm[[vn]], vn)
+        })
+      }
+      
+      for (v in vars_last3) {
+        local({
+          vn <- v
+          output[[paste0("plot_xgb_last3_", vn)]] <- renderPlot({
+            req(results_last3[[vn]])
+            plot_fc_last3(results_last3[[vn]], vn)
           })
         })
       }
@@ -1287,8 +1325,8 @@ generation_server <- function(id, state) {
         dplyr::filter(!is.na(source), !is.na(category))
       
       source_colors <- c(
-        "Wind"  = "#1f77b4",  
-        "Solar" = "#e6550d"  
+        "Wind"  = "#3d405b",  
+        "Solar" = "#e07a5f"  
       )
       
       line_types <- c(
@@ -1387,7 +1425,7 @@ generation_server <- function(id, state) {
             click <- input[[paste0("plot_click_", vn, "_click")]]
             if (!is.null(click$x)) {
               df_dates <- results[[vn]]$forecast$date
-              df_dates <- as.Date(df_dates, origin = if (is.numeric(df_dates)) "1970-01-01" else NULL)
+              # df_dates <- as.Date(df_dates, origin = if (is.numeric(df_dates)) "1970-01-01" else NULL)
               selected_date2(snap_to_nearest_date(click$x, df_dates))
             }
           }, ignoreInit = TRUE)
@@ -1457,10 +1495,28 @@ generation_server <- function(id, state) {
         {
           fc  <- results$sum_demand$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
-          col <- pick_fc_col(fc, "hi95")
-          hi95_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          col <- pick_fc_col(fc, "pred")
+          med_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
-            mutate(sum_demand = dplyr::coalesce(hi95_demand, sum_demand))
+            mutate(sum_demand = dplyr::coalesce(med_demand, sum_demand))
+        }
+        
+        {
+          fc  <- results$sum_avai_solar$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_avai_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_solar = dplyr::coalesce(lo95_avai_solar, sum_avai_solar))
+        }
+        
+        {
+          fc  <- results$sum_avai_wind$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_wind = dplyr::coalesce(lo95_avai_wind, sum_avai_wind))
         }
       }
       
@@ -1468,7 +1524,7 @@ generation_server <- function(id, state) {
         {
           fc  <- results$sum_solar$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
-          col <- pick_fc_col(fc, "hi95") 
+          col <- pick_fc_col(fc, "hi95")
           hi95_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
             mutate(sum_solar = dplyr::coalesce(hi95_solar, sum_solar))
@@ -1486,23 +1542,42 @@ generation_server <- function(id, state) {
         {
           fc  <- results$sum_demand$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
-          col <- pick_fc_col(fc, "lo95")
-          lo95_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          col <- pick_fc_col(fc, "pred")
+          med_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
-            mutate(sum_demand = dplyr::coalesce(lo95_demand, sum_demand))
+            mutate(sum_demand = dplyr::coalesce(med_demand, sum_demand))
+        }
+        
+        {
+          fc  <- results$sum_avai_solar$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_avai_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_solar = dplyr::coalesce(hi95_avai_solar, sum_avai_solar))
+        }
+        
+        {
+          fc  <- results$sum_avai_wind$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_wind = dplyr::coalesce(hi95_avai_wind, sum_avai_wind))
         }
       }
       
       #apply policies
       df_all <- df_all %>%
-        mutate(`Generated RES` = sum_wind + sum_solar)
+        mutate(`Generated RES` = sum_wind + sum_solar,
+               `Available RES` = sum_avai_wind + sum_avai_solar)
       
      
       if (isTRUE(input$downward_regulation)) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 50,
+                                     `Generated RES` + (50 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1510,7 +1585,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 75,
+                                     `Generated RES` + (75 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1518,7 +1593,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 100,
+                                     `Generated RES` + (100 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1526,7 +1601,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2027-02-01"),
-                                     `Generated RES` + 100,
+                                     `Generated RES` + (100 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1534,31 +1609,35 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2029-01-01"),
-                                     `Generated RES` + 100,
+                                     `Generated RES` + (100 * 24 * 30),
                                      `Generated RES`)
           )
       }
       if (isTRUE(input$reduce_moyle)) {
         df_all <- df_all %>%
           mutate(
-            `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 850,
-                                     `Generated RES`)
-          )
+            sum_import = ifelse(date >= as.Date("2026-01-01"),
+                                sum_import - (450 * 24 * 30),
+                                sum_import),
+            sum_export = ifelse(date >= as.Date("2026-01-01"),
+                                sum_export + (400 * 24 * 30),
+                                sum_export),
+          ) %>%
+          mutate(sum_import = if_else(is.na(sum_import), NA_real_, pmax(sum_import, 0)))
       }
       if (isTRUE(input$ldes)) {
         df_all <- df_all %>%
           mutate(
-            `Generated RES` = ifelse(date >= as.Date("2027-04-01"),
-                                     `Generated RES` + 600,
+            `Generated RES` = ifelse(date >= as.Date("2030-10-01"),
+                                     `Generated RES` + (600 * 24 * 30),
                                      `Generated RES`)
           )
       }
       if (isTRUE(input$sn_interconnector)) {
         df_all <- df_all %>%
           mutate(
-            `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 900,
+            `Generated RES` = ifelse(date >= as.Date("2031-01-01"),
+                                     `Generated RES` + (900 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1575,13 +1654,13 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           left_join(new_renewables_wider,by = c('date'='finished')) %>% 
           mutate(
-            `Generated RES` = `Generated RES` + `Wind Onshore` + `Wind Offshore` + `Solar Photovoltaics`
+            `Available RES` = `Available RES` +  `Wind Onshore` + `Wind Offshore` + `Solar Photovoltaics`
           )
       }
       
       df_all <- df_all %>%
         mutate(
-          Target = `Generated RES` / sum_demand,
+          `Generated RES` = pmin(`Generated RES`, `Available RES`, na.rm = FALSE),
           SNSP   = (`Generated RES`  + sum_import) / (sum_demand + sum_export),
           
           `Planned SNSP` = case_when(
@@ -1605,11 +1684,32 @@ generation_server <- function(id, state) {
             (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
             NA_real_
           ),
+          `Dispatch Down` = sum_avai_solar + sum_avai_wind - `Generated RES`,
+          `Dispatch Down` = pmax(`Dispatch Down`, 0),
           
           `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")
         ) %>%
-        select(-.dd_total) %>%
-        rename_with(~ nice_names[.x], .cols = names(nice_names)) %>%
+        mutate(
+          possible_res = `Planned SNSP` * (sum_demand + sum_export) - sum_import,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            possible_res,
+            `Generated RES`
+          )
+          
+        ) %>%
+        mutate( 
+          Target = `Generated RES` / sum_demand
+        ) %>%
+        select(- possible_res) %>%
+        rename_with(~ nice_names[.x], .cols = names(nice_names))
+      
+      df_all <- df_all %>%
         mutate(date = format(date, "%Y-%m-%d"))
     })
     
@@ -1712,10 +1812,12 @@ generation_server <- function(id, state) {
         e_line(SNSP,itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
         e_line(`Planned SNSP`, lineStyle = list(type='dashed'), itemStyle = list(opacity=0),emphasis = list(focus='series')) %>%  # #FFDE21
         e_line(Curtailment, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
-        e_line(Constraint, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        e_line(Constraint, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>%
+        # e_line(`Available RES`, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        # e_line(`Generated RES`, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
         e_x_axis(type = 'time' ,max = "2030-12-01") %>%
    
-        e_color(c('black','red', 'lightcoral',  'royalblue', 'steelblue')) %>%
+        e_color(c('black','red', 'lightcoral',  'royalblue', 'steelblue', '#b3d89c','#9dc3c2')) %>%
         e_annotations(default_color = 'grey',
                       legend = F,
                       name = 'Target',
