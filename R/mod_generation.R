@@ -163,7 +163,7 @@ br(),br(),
                   tags$label(
                     class = "input-group-text",
                     `for` = ns("downward_regulation"),
-                    h5(class = 'h4 fw-bold',2028)
+                    h5(class = 'h4 fw-bold',2026)
                   ),
                   div(
                     class = "input-group-text",
@@ -182,6 +182,11 @@ br(),br(),
                     `for` = ns("security_standards"),
                     "Review of operational security standards"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("security_standards"),
+                    h5(class = 'h4 fw-bold',2026)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -199,6 +204,11 @@ br(),br(),
                     `for` = ns("reduce_mustruns"),
                     "Perform a review to reduce the number of must-run units from 3 to 2"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("reduce_mustruns"),
+                    h5(class = 'h4 fw-bold',2026)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -215,6 +225,11 @@ br(),br(),
                     class = "form-control",
                     `for` = ns("reduce_moyle"),
                     "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector"
+                  ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("reduce_moyle"),
+                    h5(class = 'h4 fw-bold',2026)
                   ),
                   div(
                     class = "input-group-text",
@@ -256,6 +271,11 @@ br(),br(),
                     `for` = ns("phase1_lcis"),
                     "Monitor the delivery of the Phase I Low Carbon Inertia Services"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("phase1_lcis"),
+                    h5(class = 'h4 fw-bold',2027)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -272,6 +292,11 @@ br(),br(),
                     class = "form-control",
                     `for` = ns("phase2_lcis"),
                     "Commence procurement process of Phase II Low Carbon Inertia Services"
+                  ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("phase2_lcis"),
+                    h5(class = 'h4 fw-bold',2029)
                   ),
                   div(
                     class = "input-group-text",
@@ -290,6 +315,11 @@ br(),br(),
                     `for` = ns("ldes"),
                     "SONI to coordinate with the Utility Regulator to create a credible for a procurement mechanism to procure enhanced system flexibility through Long Duration Energy Storage"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("ldes"),
+                    h5(class = 'h4 fw-bold',2030)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -306,6 +336,11 @@ br(),br(),
                     class = "form-control",
                     `for` = ns("sn_interconnector"),
                     "Construction of the second North-South Interconnector"
+                  ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("sn_interconnector"),
+                    h5(class = 'h4 fw-bold',2031)
                   ),
                   div(
                     class = "input-group-text",
@@ -1812,7 +1847,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + (100 * 24 * 30),
+                                     `Generated RES` + (60 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1841,6 +1876,9 @@ generation_server <- function(id, state) {
             sum_export = ifelse(date >= as.Date("2026-01-01"),
                                 sum_export + (400 * 24 * 30),
                                 sum_export),
+            # `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
+            #                          `Generated RES` + (850 * 24 * 30),
+            #                          `Generated RES`)
           ) %>%
           mutate(sum_import = if_else(is.na(sum_import), NA_real_, pmax(sum_import, 0)))
       }
@@ -1848,7 +1886,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2030-10-01"),
-                                     `Generated RES` + (600 * 24 * 30),
+                                     `Generated RES` + (500 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1959,9 +1997,9 @@ generation_server <- function(id, state) {
           ),
           
           # `Generated RES` = sum_res,
-          `Dispatch Down Wind`  = sum_avai_wind  - sum_wind,
-          `Dispatch Down Solar` = sum_avai_solar - sum_solar,
-          .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+          # `Dispatch Down Wind`  = sum_avai_wind  - sum_wind,
+          # `Dispatch Down Solar` = sum_avai_solar - sum_solar,
+          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
           
           # Curtailment = if_else(
           #   .dd_total > 0,
@@ -1975,8 +2013,7 @@ generation_server <- function(id, state) {
           # ),
           `Dispatch Down` = `Available RES` - `Generated RES`,
           # `Dispatch Down` = pmax(`Dispatch Down`, 0),
-          Curtailment = 0.17 * `Dispatch Down`,
-          Constraint = 0.83 * `Dispatch Down`,
+          
           
           `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")
         ) %>%
@@ -1984,14 +2021,16 @@ generation_server <- function(id, state) {
           possible_res = `Planned SNSP` * (sum_demand + sum_export) - sum_import,
           `Dispatch Down` = if_else(
             `Curtailment SNSP` == "Curtailment SNSP",
-            `Generated RES` - possible_res,
+            `Dispatch Down` + `Generated RES` - possible_res,
             `Dispatch Down`
           ),
           `Generated RES` = if_else(
             `Curtailment SNSP` == "Curtailment SNSP",
-            possible_res,
+            pmin(possible_res, `Generated RES`),
             `Generated RES`
-          )
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
           
         ) %>%
         mutate( 
@@ -2098,7 +2137,21 @@ generation_server <- function(id, state) {
       
       dt %>%
       e_charts(date) %>%
-      e_bar(`Dispatch Down`,color='salmon', stack = 'f', name = 'Dispatch Down',emphasis = list(focus= 'series')) %>%
+        
+        e_bar(Curtailment,
+              stack = "dd",
+              name = "Curtailment",
+              color = "firebrick",
+              emphasis = list(focus = 'series')
+        ) %>%
+        e_bar(Constraint,
+              stack = "dd",
+              name = "Constraint",
+              color = "salmon",
+              emphasis = list(focus = 'series')
+        ) %>%
+        
+      # e_bar(`Dispatch Down`,color='salmon', stack = 'f', name = 'Dispatch Down',emphasis = list(focus= 'series')) %>%
       # e_line(Dispatch.Down.Wind,color='salmon', stack = 'h') %>%
       # e_bar(`Dispatch Down Solar`,color='firebrick', stack = 'f', name = 'Dispatch Down Solar',emphasis = list(focus= 'series')) %>%
       # e_line(Dispatch.Down.Solar,color='lightcoral', stack = 'h') %>%
@@ -2317,8 +2370,7 @@ generation_server <- function(id, state) {
           #        (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
           #        NA_real_
           #      ),
-          Curtailment = 0.17 * `Dispatch Down`,
-          Constraint = 0.83 * `Dispatch Down`,
+          
                
                `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))%>%
         mutate(
@@ -2332,7 +2384,9 @@ generation_server <- function(id, state) {
             `Curtailment SNSP` == "Curtailment SNSP",
             possible_res,
             `Generated RES`
-          )
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
           
         ) %>%
         mutate(
@@ -2447,10 +2501,24 @@ generation_server <- function(id, state) {
           #        (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
           #        NA_real_
           #      ),
-          Curtailment = 0.17 * `Dispatch Down`,
-          Constraint = 0.83 * `Dispatch Down`,
                
         `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")) %>%
+        mutate(
+          possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            possible_res,
+            `Generated RES`
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
+          
+        ) %>%
         mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
       # page_fluid(
       #   icon('arrow-right',class= 'visually-hidden'),
@@ -2540,7 +2608,8 @@ generation_server <- function(id, state) {
             TRUE                       ~ NA_real_
           )
         ) %>%
-        mutate(.dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+        mutate(
+          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
           
           # Curtailment = if_else(
           #   .dd_total > 0,
@@ -2553,9 +2622,24 @@ generation_server <- function(id, state) {
           #   NA_real_
           # ),
           
-          `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""),
+          `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))%>%
+        mutate(
+          possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            possible_res,
+            `Generated RES`
+          ),
           Curtailment = 0.17 * `Dispatch Down`,
-          Constraint = 0.83 * `Dispatch Down`,) %>%
+          Constraint = 0.83 * `Dispatch Down`,
+          
+        ) %>%
+          
         mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
       
       yearly_df
