@@ -32,7 +32,7 @@ div(style = 'position:sticky; top:8%; height:90vh;',
               h6(style="text-align:center;color:white;",'80% by 2030')
         ),
         
-        div(class = 'alert alert-success',
+        div(class = 'alert alert-light',
             style =
               "justify-content: center;border-radius: 25px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 20px auto;",
             tags$small(class = 'mb-1 text-muted text-center', 'Proportion of Demand Renewable Sources'),
@@ -52,7 +52,7 @@ div(style = 'position:sticky; top:8%; height:90vh;',
         ),
         div(
           style =
-            "background:white;border:5px solid salmon;justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 10px auto;",
+            "background:white;border:5px solid var(--bs-primary);justify-content: center;border-radius: 55px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin: 10px auto;",
           tags$small(class = 'text-muted', 'Annual New Capacity'),
           # h3( "2 MW/yr"),
           h3(textOutput(inline = T,'new_res_current_cumulative_target_date1'),'MW'),

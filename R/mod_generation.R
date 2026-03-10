@@ -140,7 +140,7 @@ br(),br(),
       tabPanel(class = 'p-5 m-5',
         title = "Model‑Based Predictions",
         hr(),
-        br(),br(),
+        br(), br(), 
         div(class= 'alert alert-light', h2('Predictions to 2030')),
         # Policy Options Card
         layout_columns(
@@ -400,11 +400,14 @@ br(),br(),
         ),
         
         br(), br(),
-        h5("Selected Forecast Combined Series (MWh)"),
+        #h5("Selected Forecast Combined Series (MWh)"),
+        h5(class = 'lead', 'MWhr'),
+        div(class = "bg-light",
         
         br(),br(),
-        DTOutput(ns("last_year_sums_table_dt")),
-        br(),br(),
+        uiOutput(ns("last_year_sums_table_dt")),
+        br(),br()
+        ),
         # DTOutput(ns("combined_forecast_table_ci_dt")),
           div(class='d-flex ',
         div( class="container",
@@ -426,7 +429,6 @@ br(),br(),
         div(sticky_side_bar())
           ),
         # sticky_side_bar(),
-        
         
         # card(
         #   class = "shadow-sm border-0 rounded-3 p-5 m-5",
@@ -579,16 +581,35 @@ br(),br(),
 #server
 generation_server <- function(id, state) {
   moduleServer(id, function(input, output, session) {
-    
+     
     new_renewables_reactive <- reactive({
       state$renewables_run
-      offshore_wind <- read.csv('offshore_wind.csv')
-      forward_projects <- read.csv('forward_projects.csv')
-      # forward_projects_outcome_first <- read.csv('forward_projects_outcome_first.csv')
-      current_projects_projected_forward <- read.csv('current_projects_projected_forward.csv')
+
+      req(
+        !is.null(state$offshore_wind),    
+        !is.null(state$forward_projects),
+        !is.null(state$current_projects_projected_forward)
+      )
+
+      offshore_wind <- state$offshore_wind
+      forward_projects <- state$forward_projects
+      current_projects_projected_forward <- state$current_projects_projected_forward
+
+      normalize_capacity_col <- function(df) {
+        if ("Installed Capacity (MWelec)" %in% names(df)) {
+          df %>% mutate(installed_capacity_mwelec = .data[["Installed Capacity (MWelec)"]])
+        } else if ("Installed.Capacity..MWelec." %in% names(df)) {
+          df %>% mutate(installed_capacity_mwelec = .data[["Installed.Capacity..MWelec."]])
+        } else {
+          df %>% mutate(installed_capacity_mwelec = 0)
+        }
+      }
+
+      forward_projects <- normalize_capacity_col(forward_projects)
+      current_projects_projected_forward <- normalize_capacity_col(current_projects_projected_forward)
       
       params = list()
-      params$number_runs = max(forward_projects$run)
+      params$number_runs = max(forward_projects$run, na.rm = TRUE)
       
       z <- bind_rows(
         current_projects_projected_forward,
@@ -601,7 +622,7 @@ generation_server <- function(id, state) {
         group_by(finished, 
                  tech, 
                  run) |> 
-        summarise(MW = sum(`Installed.Capacity..MWelec.`,na.rm = T),
+        summarise(MW = sum(installed_capacity_mwelec,na.rm = T),
                   no_proj = n()) |> 
         ungroup() %>% 
         left_join(expand.grid(
@@ -616,7 +637,6 @@ generation_server <- function(id, state) {
         summarise(MW = mean(`MW`,na.rm = T),
                   no_proj = mean(n))
       
-      
       q <- offshore_wind %>% 
         mutate(finished = as.Date(finished)) %>% 
         mutate(tech = 'Wind Offshore') %>% 
@@ -626,8 +646,6 @@ generation_server <- function(id, state) {
         ) %>% 
         replace_na(replace = list( MW = 0, no_proj = 0)) %>% 
         mutate(cumMW = mean*1000)
-      
-      
       
       # q <- q %>% 
       #   mutate(cumMW = ifelse(finished>'2028-04-01',500,0)) %>% 
@@ -672,7 +690,7 @@ generation_server <- function(id, state) {
         class = "shadow-sm border-0 rounded-3",
       card_header(
         class = "bg-white  h5 fw-bolder p-3",
-        "Scenario Configuration"
+        "New Renewables"
       ),
       card_body(class = 'p-3',
     tags$label("Select Scenario for renewables:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
@@ -1636,8 +1654,8 @@ generation_server <- function(id, state) {
       dt %>% 
         mutate(exports = -1* Exports) %>% 
         e_charts(date) %>% 
-        e_area(`Generated Solar`, stack = 'f', color='cornflowerblue', emphasis = list(focus= 'series')) %>% 
-        e_area(`Generated Wind`, stack = 'f', color='#FFDE21',emphasis = list(focus= 'series')) %>% 
+        e_area(`Generated Solar`, stack = 'f', color='#FFDE21', emphasis = list(focus= 'series')) %>% 
+        e_area(`Generated Wind`, stack = 'f', color='cornflowerblue',emphasis = list(focus= 'series')) %>% 
         e_line(`Generated RES`, color='grey',emphasis = list(focus= 'series')) %>% 
         e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
         e_y_axis(name = 'MWh') %>%
@@ -1651,8 +1669,8 @@ generation_server <- function(id, state) {
       dt %>% 
         mutate(exports = -1* Exports) %>% 
         e_charts(date) %>% 
-        e_area(`Available Solar`, stack = 'f', color='cornflowerblue',emphasis = list(focus= 'series')) %>% 
-        e_area(`Available Wind`, stack = 'f', color='#FFDE21',emphasis = list(focus= 'series')) %>% 
+        e_area(`Available Solar`, stack = 'f', color='#FFDE21',emphasis = list(focus= 'series')) %>% 
+        e_area(`Available Wind`, stack = 'f', color='cornflowerblue',emphasis = list(focus= 'series')) %>% 
         e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
         e_y_axis(label = 'MWh') %>%
         e_theme('walden') %>% 
@@ -1785,7 +1803,7 @@ generation_server <- function(id, state) {
     }, digits = 3, rownames = FALSE)
     
     
-    output$last_year_sums_table_dt <- renderDT({
+    output$last_year_sums_table_dt <- renderUI({
       print('combined_forecast_ci()')
       print(combined_forecast_ci())
       print('----------------------')
@@ -1832,64 +1850,115 @@ generation_server <- function(id, state) {
                ),
                
                `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))
-      # page_fluid(
-      #   icon('arrow-right',class= 'visually-hidden'),
       
-      # yearly_df <- yearly_df %>% 
-      #   mutate(across(-c('Curtailment SNSP','year'),
-      #                 ~as.numeric(round(.x))))
-      
-      yearly_df %>% 
-        rowwise( ) %>% 
-        mutate(.before = 2,Flow=as.character(tagList(div(style = 'min-width:100px;',class= 'm-1 p-1',
-                                                         div(div(class='lead',icon('arrow-left'),
-                                                                 f(Imports)	),
-                                                             p(class='text-muted text-bg-info p-1 m-1 rounded-2','Imports')),
-                                                         div(class = 'float-right',
-                                                             span(class='text-muted',f(Exports)	,icon('arrow-right')),
-                                                             p(class='text-bg-danger p-1 m-1 rounded-2','Exports')
-                                                         ),
-        )))) %>% 
-        mutate(.after = 2, Renewables=as.character(tagList(div(
-          h4(class='text-bg-success p-1 m-1 rounded-2',icon('leaf'),f(`Generated RES`)),
-          div(class = 'text-center',
-              div(f(`Generated Solar`),'/',f(`Available Solar`), icon(class='text-yellow','sun')),
-              div(f(`Generated Wind`),'/',f(`Available Wind`), icon(class='text-blue','fan'))
-          ))))) %>% 
-        mutate(
-          .after = 3,Demand=as.character(tagList(div( class= 'm-1 p-1', 
-                                                      icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
-                                                      icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
-                                                      p(class='text-bg-dark p-1 rounded-2 m-1' ,' MW ' ,f(Demand), 
-                                                        icon(class= 'text-centre','industry'),
-                                                        icon(class= '','house')
-                                                      )
-          )))) %>% 
-        mutate(.after = 4,year= as.character(h1(year))) %>% 
-        mutate(Target = as.character(div(style = 'width:105px;',circular_value(f(Target*100)) ) ))%>% 
-        # mutate(.after = 5,Target = as.character(h1(Target)) )%>% 
-        mutate(gap='') %>%
-        mutate(SNSP = as.character(div(class= 'm-1 p-1',tags$ul(tags$li(class='text-muted','Actual / Planned SNSP'),
-                                                                tags$li(paste(format(SNSP,digits=2) ,'/', format(`Planned SNSP`,digits=2) )),
-                                                                tags$li( class='text-danger',paste('\u394',format(`Planned SNSP`-SNSP,digits=2) ))
-        )))) %>%
-        mutate(`Dispatch Down` = as.character(div(class= 'm-1 p-1',
-                                                  tags$ul(
-                                                    tags$li(paste('Constraint:',format(Constraint,digits=2) )),
-                                                    tags$li(paste('Curtailment:',format(Curtailment,digits=2) ))),
-                                                  
-                                                  div(style = 'border-style: double', 
-                                                      class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
-                                                      h5(class = 'fw-bold','MW',f(.dd_total)))
-                                                  
-        ))) %>%
-        select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
-        DT::datatable(height = '100vh',
-                      escape = F, 
-                      
-                      rownames=F,
-                      selection='none',
-                      options = list(dom = '',ordering = FALSE,pageLength = 10, scrollX = TRUE))})
+      # Create grid layout with KPI cards
+      div(class = "container-fluid",
+        div(class = "row g-3",
+          # Target KPI on the left
+          div(class = "col-md-3",
+            div(class = "card border-0 h-100",
+              div(class = "card-body text-center",
+                h6(class = "card-title text-muted", "Target"),
+                div(style = 'margin: auto;width:80%;', big_circular_value(f(yearly_df$Target*100)))
+              ),
+              div(class='card-bottom', colour_scale_bar())
+            )
+          ),
+          # 3x3 Grid on the right
+          div(class = "col-md-9",
+            div(class = "row g-3",
+              # Year KPI
+              div(class = "col-md-4",
+                div(class = "card border-0 h-100",
+                  div(class = "card-body text-center",
+                    h6(class = "card-title text-muted", "Year"),
+                    h1(yearly_df$year)
+                  )
+                )
+              ),
+              # Flow KPI
+              div(class = "col-md-4",
+                div(class = "card border-0 h-100",
+                  div(class = "card-body",
+                    h6(class = "card-title text-muted", "Flow"),
+                    div(style = 'min-width:100px;',class= 'm-1 p-1',
+                      div(div(class='lead',icon('arrow-left'),
+                              f(yearly_df$Imports)),
+                          p(class='text-muted text-bg-info p-1 m-1 rounded-2','Imports')),
+                      div(class = 'float-right',
+                          span(class='fw-bold',f(yearly_df$Exports),icon('arrow-right')),
+                          p(class='text-bg-danger p-1 m-1 rounded-2','Exports')
+                      )
+                    )
+                  )
+                )
+              ),
+              # Renewables KPI
+              div(class = "col-md-4",
+                div(class = "card border-0 h-100",
+                  div(class = "card-body",
+                    h6(class = "card-title text-muted", "Renewables"),
+                    div(
+                      h4(class='text-bg-success p-1 m-1 rounded-2',icon(class= 'text-white','leaf'),f(yearly_df$`Generated RES`),'MW'),
+                      br(),div(class = 'text-center lead',
+                          div(f(yearly_df$`Generated Solar`),'/',f(yearly_df$`Available Solar`),'MW', icon(class='text-yellow','sun')),
+                          div(f(yearly_df$`Generated Wind`),'/',f(yearly_df$`Available Wind`),'MW', icon(class='text-blue','fan'))
+                      ))
+                  )
+                )
+              ),
+              # SNSP KPI
+              div(class = "col-md-4",
+                div(class = "card border-0 h-100",
+                  div(class = "card-body",
+                    h6(class = "card-title text-muted", "SNSP"),
+                    div(class= 'm-1 p-1',
+                        tags$ul(class = 'lead',
+                      tags$li(class='text-muted','Actual / Planned SNSP'),
+                      tags$li(paste(format(yearly_df$SNSP*100,digits=2) ,'% /', format(yearly_df$`Planned SNSP`*100,digits=2) ),'%'),
+                      tags$li(class='text-danger',paste('\u394',format(yearly_df$`Planned SNSP`*100-yearly_df$SNSP*100,digits=2), '%' ))
+                    ))
+                  )
+                )
+              ),
+              # Demand KPI
+              div(class = "col-md-4",
+                div(class = "card border-0 h-100",
+                  div(class = "card-body",
+                    h6(class = "card-title text-muted", "Demand"),
+                    div(class= 'm-1 p-1', 
+                        icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
+                        icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
+                        p(class='text-bg-dark fs-3 p-1 rounded-2 m-1' ,' MW ' ,f(yearly_df$Demand), 
+                          # icon(class= 'text-centre','industry'),
+                          # icon(class= '','house')
+                        )
+                    )
+                  )
+                )
+              ),
+              # Dispatch Down KPI
+              div(class = "col-md-4",
+                div(class = "card border-0 h-100",
+                  div(class = "card-body",
+                    h6(class = "card-title text-muted", "Dispatch Down"),
+                    div(class= 'm-1 p-1',
+                        tags$ul(class = 'lead',
+                          tags$li(paste('Constraint:',format(yearly_df$Constraint,digits=2) )),
+                          tags$li(paste('Curtailment:',format(yearly_df$Curtailment,digits=2) ))),
+                        
+                        div(style = 'border-style: double', 
+                            class=' rounded-3 border-4 text-white bg-dark text-center','Dispatch Down',
+                            h5(class = 'fw-bold','MW',f(yearly_df$.dd_total)))
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    })
     
     
     output$yearly_sums_table_dt <- renderDT({
@@ -1971,12 +2040,16 @@ generation_server <- function(id, state) {
 )
             )))) %>% 
           mutate(.after = 4,year= as.character(h1(year))) %>% 
-          mutate(Target = as.character(div(style = 'width:105px;',circular_value(f(Target*100)) ) ))%>% 
+          mutate(Target = as.character(div(style = 'width:105px;',
+                                           circular_value(f(Target*100)) ) ))%>% 
           # mutate(.after = 5,Target = as.character(h1(Target)) )%>% 
           mutate(gap='') %>%
-          mutate(SNSP = as.character(div(class= 'm-1 p-1',tags$ul(tags$li(class='text-muted','Actual / Planned SNSP'),
-                                             tags$li(paste(format(SNSP,digits=2) ,'/', format(`Planned SNSP`,digits=2) )),
+          mutate(SNSP = as.character(div(class= 'm-1 p-1',tags$ul(
+            tags$li(class='text-muted','Actual / Planned SNSP'),
+                                             div(class = 'lead',
+                                               tags$li(paste(format(SNSP,digits=2) ,'/', format(`Planned SNSP`,digits=2) )),
                                              tags$li( class='text-danger',paste('\u394',format(`Planned SNSP`-SNSP,digits=2) ))
+                                             )
           )))) %>%
           mutate(`Dispatch Down` = as.character(div(class= 'm-1 p-1',
             tags$ul(

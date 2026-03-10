@@ -1,6 +1,5 @@
 # Combined Energy Planning Dashboard
 
-print('e')
 library(shiny)
 library(bslib)
 library(lubridate)
@@ -13,6 +12,7 @@ library(echarts4r)
 
 # Load renewable simulation sources
 options(shiny.devmode = TRUE)
+options(shiny.sanitize.errors = TRUE)
 target_date = '2030-01-01'
 end_date = '2032-01-01'
 
@@ -34,6 +34,7 @@ getSliderValue <- function(inputValue, defaultValue) {
 
 source('./components/circular_value.R')
 source('./components/sticky_side_bar.R')
+source('./components/colour_scale_bar.R')
 
 mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
                               to = as.Date(end_date),
@@ -62,7 +63,7 @@ source("./R/mod_supply.R")
 # source("./modules/renewable_mod.R")
 
 #ui
-ui <- navbarPage(
+ui <- navbarPage( 
   title = "Energy Planning Dashboard",
   theme = bs_theme(version = 5, 
                    bootswatch = 'lumen',
@@ -91,10 +92,13 @@ ui <- navbarPage(
     
     tags$script(HTML("
       Shiny.addCustomMessageHandler('toggleLoadingBtn', function(state) {
-        if (state === 'show') {
-          $('#loading').show();
-        } else {
-          $('#loading').hide();
+        var loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+          if (state === 'show') {
+            loadingEl.style.display = 'block';
+          } else {
+            loadingEl.style.display = 'none';
+          }
         }
       });
       
@@ -123,6 +127,10 @@ ui <- navbarPage(
     ")),
     
     tags$style(HTML("
+    shiny-error-console {
+    visibility:hidden;
+}
+
     td {
     border-color: white;
     border-style: solid;
@@ -161,11 +169,13 @@ ui <- navbarPage(
       
       tags$script(HTML("
       Shiny.addCustomMessageHandler('toggleLoadingBtn', function(state) {
-
-        if (state === 'show') {
-          $('#loading').show();
-        } else {
-          $('#loading').hide();
+        var loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+          if (state === 'show') {
+            loadingEl.style.display = 'block';
+          } else {
+            loadingEl.style.display = 'none';
+          }
         }
       });
       
@@ -218,7 +228,8 @@ ui <- navbarPage(
                                                 `data-bs-toggle` = "tooltip",
                                                 `data-bs-placement` = "bottom",
                                                 icon("sliders-h")
-                                         )),
+                                         )
+                                         ),
                                  tags$a(class = "nav-link p-2", href = "#capacity",
                                         title = "Offshore Pre-planning and Capacity Factors",
                                         `data-bs-toggle` = "tooltip",
@@ -245,22 +256,20 @@ ui <- navbarPage(
                                   label = tagList(icon("play"), " Run Simulation"),
                                   class = "btn btn-primary",
                                   style = "white-space: nowrap;"),
-                     actionButton(inputId = 'submit', 
+                     actionButton(inputId = 'take_state', 
                                   label = tagList(icon("arrow-up-right-from-square"), " Take state"),
                                   class = "btn btn-primary",
                                   style = "white-space: nowrap;"),
                  ))
              ),
              
-             # Add spacing to prevent overlap
+             # Add spacing to prevent overlap with fixed navbar and to separate from content
              div(style = "margin-top: 60px;"),
-             
              
              # Parameters Section
              div(id = "parameters", class = "scroll-section",
                  # h2(class = 'text-body-secondary', icon("sliders-h"), " Energy Parameters"),
                  h1(class = 'text-body-secondary',  " "),
-                 
                  
                  # Ion Range Slider with flat skin
                  div(class = "ion-range-container",
@@ -346,7 +355,7 @@ ui <- navbarPage(
                          tags$span(class = "input-group-text", " Capacity Factor"),
                          tags$input(id = "capacity_factor", type = "number", value = 22, min = 15, max = 40, step = 1, 
                                     class = "form-control bg-success-subtle", `aria-label` = "Capacity factor percentage"),
-                         tags$span(class = "input-group-text", icon("percent"), )
+                        tags$span(class = "input-group-text", icon("percent"))
                      ),
                      
                      # Real-time capacity factor feedback
@@ -354,11 +363,9 @@ ui <- navbarPage(
                          tags$small(
                            icon("info-circle"), " Current CF: ",
                            tags$strong(textOutput("capacityFactorValue", inline = TRUE)), "%"
-                           
-                         ),
-                         tags$p( textOutput('generationCapacityConversion')
                          )
-                     )
+                     ),
+                     tags$p(textOutput('generationCapacityConversion'))
                  ),
                  
                  div(class = "slider-section",
@@ -839,6 +846,9 @@ ui <- navbarPage(
 #server
 server <- function(input, output, session) {
   
+  # Suppress client-side error notifications
+  options(shiny.sanitize.errors = FALSE)
+  
   # ==== Energy Flow Diagram Logic (original app1.R) ====
   state <- reactiveValues(
     view = "home",            
@@ -1150,9 +1160,19 @@ server <- function(input, output, session) {
       
   })
     
-  
-  observeEvent(input$submit, { 
+observeEvent(input$take_state, { 
+
+    state$renewables_take_state = date()
+    state$selected_page <- "Generation"
+    state$view <- "page"
     
+    # Navigate to Energy Flow Diagram tab
+    updateNavbarPage(session, "main_nav", selected = "energy_flow_tab")
+
+})
+
+  observeEvent(input$submit, { 
+
     state$renewables_run = date()
     print('Start Run1')
     
@@ -1228,7 +1248,6 @@ server <- function(input, output, session) {
         passed_planning_date = Date + passed_planning_time) |>
       mutate(broad_status = 'Connection') |> 
       
-      
       mutate(passed_connection = sample(c(T,F),
                                         replace = T,
                                         prob = c(transition_probs()$prob [transition_probs()$from == broad_status],
@@ -1255,6 +1274,7 @@ server <- function(input, output, session) {
     # print('forward_projects')
     # print(forward_projects)
     write.csv(forward_projects,'forward_projects.csv')
+    state$forward_projects <- forward_projects
     
     x <- forward_projects |> 
       filter(passed_planning &
@@ -1406,7 +1426,6 @@ server <- function(input, output, session) {
               print(unique(list_statuses[[i]]$broad_status))
               print(transition_probs())
               
-              
               list_statuses[[i]] <- list_statuses[[i]] |> 
 
               rowwise() |>
@@ -1427,7 +1446,6 @@ server <- function(input, output, session) {
             Construction = {
               list_statuses[[i]] <- list_statuses[[i]] |> 
                 
-          
                 rowwise() |> 
                 mutate(passed_construction = sample(c(T,F),
                                                     replace = T,
@@ -1455,7 +1473,7 @@ server <- function(input, output, session) {
     print('current_projects_projected_forward')
     print(current_projects_projected_forward)
     write.csv(current_projects_projected_forward,'current_projects_projected_forward.csv')
-    
+    state$current_projects_projected_forward <- current_projects_projected_forward
     
     x <- current_projects_projected_forward |> 
       filter(passed_planning &
@@ -1470,12 +1488,8 @@ server <- function(input, output, session) {
                run) |> 
       summarise(MW = sum(`MW`) ) 
     
-    
-    
     # Monthly SUM
     
-     
-      
       expand.grid(yr = 2012:year(end_date),
                   mn = 1:12,
                   run = 1:params$number_runs ) |> 
@@ -1485,7 +1499,6 @@ server <- function(input, output, session) {
     current_projects_outcome_first()
     
   })
-  
   
   forward_projects_outcome <- reactiveVal({forward_projects_outcome})
   current_projects_outcome <- reactiveVal({current_projects_outcome})
@@ -1499,14 +1512,15 @@ server <- function(input, output, session) {
     
     print(params$offshore_start)
     
-   
-    
-    write.csv(x =     data.frame(finished = mons) |> 
+    offshore_wind_data <- data.frame(finished = mons) |> 
                 mutate(mean = ifelse(finished > params$offshore_start, 
                                      params$offshore_capacity/12, 
                                      0)
                 ) |> 
-                mutate(mean = mean*params$offshore_included ), file = 'offshore_wind.csv')
+                mutate(mean = mean*params$offshore_included )
+    
+    write.csv(x = offshore_wind_data, file = 'offshore_wind.csv')
+    state$offshore_wind <- offshore_wind_data
     
     data.frame(finished = mons) |> 
       mutate(mean = ifelse(finished > params$offshore_start, 
