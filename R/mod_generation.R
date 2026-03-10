@@ -163,7 +163,7 @@ br(),br(),
                   tags$label(
                     class = "input-group-text",
                     `for` = ns("downward_regulation"),
-                    h5(class = 'h4 fw-bold',2028)
+                    h5(class = 'h4 fw-bold',2026)
                   ),
                   div(
                     class = "input-group-text",
@@ -182,6 +182,11 @@ br(),br(),
                     `for` = ns("security_standards"),
                     "Review of operational security standards"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("security_standards"),
+                    h5(class = 'h4 fw-bold',2026)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -199,6 +204,11 @@ br(),br(),
                     `for` = ns("reduce_mustruns"),
                     "Perform a review to reduce the number of must-run units from 3 to 2"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("reduce_mustruns"),
+                    h5(class = 'h4 fw-bold',2026)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -215,6 +225,11 @@ br(),br(),
                     class = "form-control",
                     `for` = ns("reduce_moyle"),
                     "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector"
+                  ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("reduce_moyle"),
+                    h5(class = 'h4 fw-bold',2026)
                   ),
                   div(
                     class = "input-group-text",
@@ -256,6 +271,11 @@ br(),br(),
                     `for` = ns("phase1_lcis"),
                     "Monitor the delivery of the Phase I Low Carbon Inertia Services"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("phase1_lcis"),
+                    h5(class = 'h4 fw-bold',2027)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -272,6 +292,11 @@ br(),br(),
                     class = "form-control",
                     `for` = ns("phase2_lcis"),
                     "Commence procurement process of Phase II Low Carbon Inertia Services"
+                  ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("phase2_lcis"),
+                    h5(class = 'h4 fw-bold',2029)
                   ),
                   div(
                     class = "input-group-text",
@@ -290,6 +315,11 @@ br(),br(),
                     `for` = ns("ldes"),
                     "SONI to coordinate with the Utility Regulator to create a credible for a procurement mechanism to procure enhanced system flexibility through Long Duration Energy Storage"
                   ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("ldes"),
+                    h5(class = 'h4 fw-bold',2030)
+                  ),
                   div(
                     class = "input-group-text",
                     tags$input(
@@ -306,6 +336,11 @@ br(),br(),
                     class = "form-control",
                     `for` = ns("sn_interconnector"),
                     "Construction of the second North-South Interconnector"
+                  ),
+                  tags$label(
+                    class = "input-group-text",
+                    `for` = ns("sn_interconnector"),
+                    h5(class = 'h4 fw-bold',2031)
                   ),
                   div(
                     class = "input-group-text",
@@ -331,71 +366,151 @@ br(),br(),
                  ns("ldes"), ns("sn_interconnector"))))
             )
           ),
-          div(  
-            card(
+        #   div(  
+        #     card(
+        #     class = "shadow-sm border-0 rounded-3",
+        #     card_header(
+        #       class = "bg-white h5 fw-bolder p-3",
+        #       "Source of Renewable Simulation"
+        #     ),
+        #     card_body(class = 'p-3',
+        #               tags$label("Select Source of Renewable Simulation:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
+        #               div(
+        #                 class = "btn-group ",
+        #                 role = "group",
+        #                 `aria-label` = "Scenario selection",
+        #                 tags$input(
+        #                   type = "radio",
+        #                   class = "btn-check shiny-input-radiogroup shiny-input-bound",
+        #                   name = ns("scenario_input_choice"),
+        #                   id = ns("policy_simulation"),
+        #                   value = 'policy_simulation',
+        #                   autocomplete = "off"
+        #                 ),
+        #                 tags$label(
+        #                   class = "btn btn-outline-primary opacity-75",
+        #                   `for` = ns("policy_simulation"),
+        #                   "REPD projection using Policy simulation"
+        #                 ),
+        #                 tags$input(
+        #                   type = "radio",
+        #                   class = "btn-check shiny-input-radiogroup",
+        #                   name = ns("scenario_input_choice"),
+        #                   id = ns("forecasts"),
+        #                   value = 'forecasts',
+        #                   checked = "checked",
+        #                   autocomplete = "off"
+        #                 ),
+        #                 tags$label(
+        #                   class = "btn btn-outline-primary opacity-75",
+        #                   `for` = ns("forecasts"),
+        #                   "Forecasts"
+        #                 )
+        #               )
+        #               ),
+        #               tags$script(HTML(sprintf("
+        #         $(document).ready(function() {
+        #           var radioName = '%s';
+        #           $('input[name=\"' + radioName + '\"]').on('change', function() {
+        #             if (this.checked) {
+        #               Shiny.setInputValue(radioName, this.value);
+        #             }
+        #           });
+        #           // Set initial value
+        #           var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
+        #           if (checkedRadio.length > 0) {
+        #             Shiny.setInputValue(radioName, checkedRadio.val());
+        #           }
+        #         });
+        #       ", ns("scenario_input_choice"))))
+        #     
+        #   ),
+        # 
+        # 
+        #    uiOutput(fill = T,ns('selection_dependent'))
+        #    
+        #     
+        #   
+        # )
+        div(
+          card(
             class = "shadow-sm border-0 rounded-3",
             card_header(
               class = "bg-white h5 fw-bolder p-3",
               "Source of Renewable Simulation"
             ),
-            card_body(class = 'p-3',
-                      tags$label("Select Source of Renewable Simulation:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
-                      div(
-                        class = "btn-group ",
-                        role = "group",
-                        `aria-label` = "Scenario selection",
-                        tags$input(
-                          type = "radio",
-                          class = "btn-check shiny-input-radiogroup shiny-input-bound",
-                          name = ns("scenario_input_choice"),
-                          id = ns("policy_simulation"),
-                          value = 'policy_simulation',
-                          autocomplete = "off"
-                        ),
-                        tags$label(
-                          class = "btn btn-outline-primary opacity-75",
-                          `for` = ns("policy_simulation"),
-                          "REPD projection using Policy simulation"
-                        ),
-                        tags$input(
-                          type = "radio",
-                          class = "btn-check shiny-input-radiogroup",
-                          name = ns("scenario_input_choice"),
-                          id = ns("forecasts"),
-                          value = 'forecasts',
-                          checked = "checked",
-                          autocomplete = "off"
-                        ),
-                        tags$label(
-                          class = "btn btn-outline-primary opacity-75",
-                          `for` = ns("forecasts"),
-                          "Forecasts"
-                        )
-                      )
-                      ),
-                      tags$script(HTML(sprintf("
-                $(document).ready(function() {
-                  var radioName = '%s';
-                  $('input[name=\"' + radioName + '\"]').on('change', function() {
-                    if (this.checked) {
-                      Shiny.setInputValue(radioName, this.value);
-                    }
-                  });
-                  // Set initial value
-                  var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
-                  if (checkedRadio.length > 0) {
-                    Shiny.setInputValue(radioName, checkedRadio.val());
-                  }
-                });
-              ", ns("scenario_input_choice"))))
+            card_body(
+              class = 'p-3',
+              tags$label(
+                "Select Source of Renewable Simulation:",
+                style = "display: block; margin-bottom: 10px; font-weight: bold;"
+              ),
+              
+              div(
+                class = "btn-group",
+                role = "group",
+                
+                # Checkbox 1
+                tags$input(
+                  type = "checkbox",
+                  class = "btn-check",
+                  id = ns("policy_simulation"),
+                  value = "policy_simulation",
+                  autocomplete = "off"
+                ),
+                tags$label(
+                  class = "btn btn-outline-primary opacity-75",
+                  `for` = ns("policy_simulation"),
+                  "REPD projection using Policy simulation"
+                ),
+                
+                # Checkbox 2
+                tags$input(
+                  type = "checkbox",
+                  class = "btn-check",
+                  id = ns("forecasts"),
+                  value = "forecasts",
+                  autocomplete = "off",
+                  checked = "checked"
+                ),
+                tags$label(
+                  class = "btn btn-outline-primary opacity-75",
+                  `for` = ns("forecasts"),
+                  "Forecasts"
+                )
+              )
+            ),
             
+            # JS: send vector of checked boxes to Shiny
+            tags$script(HTML(sprintf("
+      $(document).ready(function() {
+        var ids = ['%s', '%s'];
+
+        function updateValue() {
+          var selected = [];
+          ids.forEach(function(id) {
+            if ($('#' + id).is(':checked')) {
+              selected.push($('#' + id).val());
+            }
+          });
+          Shiny.setInputValue('%s', selected);
+        }
+
+        ids.forEach(function(id) {
+          $('#' + id).on('change', updateValue);
+        });
+
+        // Initial update
+        updateValue();
+      });
+    ", 
+                                     ns("policy_simulation"),
+                                     ns("forecasts"),
+                                     ns("scenario_input_choice")
+            )))
           ),
-   
-  
-           uiOutput(fill = T,ns('selection_dependent'))
-           
-            
           
+          uiOutput(fill = TRUE, ns('selection_dependent'))
         )
         ),
         
@@ -410,8 +525,8 @@ br(),br(),
         div( class="container",
         div( class="row",
           
-          div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_generated_renewable'))),
-          div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_available_renewable'))),
+          div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_generated_available'))),
+          # div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_available_renewable'))),
           div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_percentage_renewable')))
         ),
         div(class="row",
@@ -445,17 +560,7 @@ br(),br(),
   
       
       
-        # KPIs and Forecast Data Card
-        # card(
-        #   class = "shadow-sm border-0 rounded-3",
-        #   card_header(
-        #     class = "bg-white",
-        #     "Key Performance Indicators"
-        #   ),
-        #   card_body(
-        #     tableOutput(ns("selected_date_kpis"))
-        #   )
-        # ),
+        
 
         
         
@@ -476,7 +581,7 @@ br(),br(),
         # ),
         
     
-      ),
+      
         
 #-------model-based predictions
         card(
@@ -571,7 +676,20 @@ br(),br(),
         h3("Historical Dispatch Down (Wind & Solar)"),
         plotOutput(ns("dd_history_plot"), height = "350px"),
         tags$hr(),
+
+        # KPIs and Forecast Data Card
+        card(
+          class = "shadow-sm border-0 rounded-3",
+          card_header(
+            class = "bg-white",
+            "Key Performance Indicators"
+          ),
+          card_body(
+            tableOutput(ns("selected_date_kpis"))
+          )
+        )
   
+      )
       )
     )
 }
@@ -585,7 +703,7 @@ generation_server <- function(id, state) {
       offshore_wind <- read.csv('offshore_wind.csv')
       forward_projects <- read.csv('forward_projects.csv')
       # forward_projects_outcome_first <- read.csv('forward_projects_outcome_first.csv')
-      current_projects_projected_forward <- read.csv('current_projects_projected_forward.csv')
+      current_projects_projected_forward <- read.csv('./current_projects_projected_forward.csv')
       
       params = list()
       params$number_runs = max(forward_projects$run)
@@ -648,81 +766,178 @@ generation_server <- function(id, state) {
    z
       })
     
+  #   output$selection_dependent <- renderUI({
+  #     
+  # 
+  #     if(input$`scenario_input_choice`=='policy_simulation'){
+  #       new_renewables_reactive() %>%   
+  #         filter(finished<'2033-01-01') %>% 
+  #         group_by(tech) %>% 
+  #         e_charts(finished,height='200px') %>%
+  #         e_grid(right='23%', bottom='0%',top ='0%') %>% 
+  #         e_area(cumMW,stack = 'd', endLabel = list(show = T,color = 'lightgrey', formatter = '{a}'),
+  #                lineStyle = list(color='white',opacity = 1,symbol = 'none'), 
+  #                itemStyle = list(opacity = 1),symbol = 'none',legend=F) %>% 
+  #         e_color(c('yellow', 'steelblue','cyan')) %>% 
+  #         e_y_axis(name = 'MW') %>%
+  #         e_tooltip(trigger='axis') %>% 
+  #         e_theme('walden')
+  #       
+  #     }else
+  #       {
+  #   div(
+  #     card(
+  #       class = "shadow-sm border-0 rounded-3",
+  #     card_header(
+  #       class = "bg-white  h5 fw-bolder p-3",
+  #       "Scenario Configuration"
+  #     ),
+  #     card_body(class = 'p-3',
+  #   tags$label("Select Scenario for renewables:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
+  #   div(
+  #     class = "btn-group ",
+  #     role = "group",
+  #     `aria-label` = "Scenario selection",
+  #     tags$input(
+  #       type = "radio",
+  #       class = "btn-check shiny-input-radiogroup",
+  #       name = session$ns("scenario_choice"),
+  #       id = session$ns("scenario_worst"),
+  #       value = "worst",
+  #       autocomplete = "off"
+  #     ),
+  #     tags$label(
+  #       class = "btn btn-outline-danger opacity-75",
+  #       `for` = session$ns("scenario_worst"),
+  #       "Pessimistic case"
+  #     ),
+  #     tags$input(
+  #       type = "radio",
+  #       class = "btn-check shiny-input-radiogroup",
+  #       name = session$ns("scenario_choice"),
+  #       id = session$ns("scenario_medium"),
+  #       value = "medium",
+  #       checked = "checked",
+  #       autocomplete = "off"
+  #     ),
+  #     tags$label(
+  #       class = "btn btn-outline-warning opacity-75",
+  #       `for` = session$ns("scenario_medium"),
+  #       "Medium case"
+  #     ),
+  #     
+  #     tags$input(
+  #       type = "radio",
+  #       class = "btn-check shiny-input-radiogroup",
+  #       name = session$ns("scenario_choice"),
+  #       id = session$ns("scenario_best"),
+  #       value = "best",
+  #       autocomplete = "off"
+  #     ),
+  #     tags$label(
+  #       class = "btn btn-outline-success opacity-75",
+  #       `for` = session$ns("scenario_best"),
+  #       "Optimum case"
+  #     )
+  #   ),
+  #   tags$script(HTML(sprintf("
+  #               $(document).ready(function() {
+  #                 var radioName = '%s';
+  #                 $('input[name=\"' + radioName + '\"]').on('change', function() {
+  #                   if (this.checked) {
+  #                     Shiny.setInputValue(radioName, this.value);
+  #                   }
+  #                 });
+  #                 // Set initial value
+  #                 var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
+  #                 if (checkedRadio.length > 0) {
+  #                   Shiny.setInputValue(radioName, checkedRadio.val());
+  #                 }
+  #               });
+  #             ", session$ns("scenario_choice"))))
+  #   )))
+  #     }
+  # })
     output$selection_dependent <- renderUI({
       
-
-      if(input$`scenario_input_choice`=='policy_simulation'){
-        new_renewables_reactive() %>%   
-          filter(finished<'2033-01-01') %>% 
-          group_by(tech) %>% 
-          e_charts(finished,height='200px') %>%
-          e_grid(right='23%', bottom='0%',top ='0%') %>% 
-          e_area(cumMW,stack = 'd', endLabel = list(show = T,color = 'lightgrey', formatter = '{a}'),
-                 lineStyle = list(color='white',opacity = 1,symbol = 'none'), 
-                 itemStyle = list(opacity = 1),symbol = 'none',legend=F) %>% 
-          e_color(c('yellow', 'steelblue','cyan')) %>% 
-          e_y_axis(name = 'MW') %>%
-          e_tooltip(trigger='axis') %>% 
-          e_theme('walden')
-        
-      }else
-        {
-    div(
-      card(
-        class = "shadow-sm border-0 rounded-3",
-      card_header(
-        class = "bg-white  h5 fw-bolder p-3",
-        "Scenario Configuration"
-      ),
-      card_body(class = 'p-3',
-    tags$label("Select Scenario for renewables:", style = "display: block; margin-bottom: 10px; font-weight: bold;"),
-    div(
-      class = "btn-group ",
-      role = "group",
-      `aria-label` = "Scenario selection",
-      tags$input(
-        type = "radio",
-        class = "btn-check shiny-input-radiogroup",
-        name = session$ns("scenario_choice"),
-        id = session$ns("scenario_worst"),
-        value = "worst",
-        autocomplete = "off"
-      ),
-      tags$label(
-        class = "btn btn-outline-danger opacity-75",
-        `for` = session$ns("scenario_worst"),
-        "Pessimistic case"
-      ),
-      tags$input(
-        type = "radio",
-        class = "btn-check shiny-input-radiogroup",
-        name = session$ns("scenario_choice"),
-        id = session$ns("scenario_medium"),
-        value = "medium",
-        checked = "checked",
-        autocomplete = "off"
-      ),
-      tags$label(
-        class = "btn btn-outline-warning opacity-75",
-        `for` = session$ns("scenario_medium"),
-        "Medium case"
-      ),
+      choices <- input$scenario_input_choice
+      section1_plot <- new_renewables_reactive() %>%
+        filter(finished < '2033-01-01') %>%
+        group_by(tech) %>%
+        e_charts(finished, height='200px') %>%
+        e_grid(right='23%', bottom='0%', top='0%') %>%
+        e_area(
+          cumMW, stack='d',
+          endLabel = list(show = TRUE, color='lightgrey', formatter='{a}'),
+          lineStyle = list(color='white', opacity=1, symbol='none'),
+          itemStyle = list(opacity=1),
+          symbol='none', legend=FALSE
+        ) %>%
+        e_color(c('yellow','steelblue','cyan')) %>%
+        e_y_axis(name='MW') %>%
+        e_tooltip(trigger='axis') %>%
+        e_theme('walden')
       
-      tags$input(
-        type = "radio",
-        class = "btn-check shiny-input-radiogroup",
-        name = session$ns("scenario_choice"),
-        id = session$ns("scenario_best"),
-        value = "best",
-        autocomplete = "off"
-      ),
-      tags$label(
-        class = "btn btn-outline-success opacity-75",
-        `for` = session$ns("scenario_best"),
-        "Optimum case"
-      )
-    ),
-    tags$script(HTML(sprintf("
+      
+      section2_ui <- div(
+        card(
+          class = "shadow-sm border-0 rounded-3",
+          card_header(
+            class = "bg-white h5 fw-bolder p-3",
+            "Scenario Configuration"
+          ),
+          card_body(
+            class = 'p-3',
+            tags$label("Select Scenario for renewables:",
+                       style="display:block;margin-bottom:10px;font-weight:bold;"),
+            
+            div(
+              class = "btn-group",
+              role = "group",
+              `aria-label` = "Scenario selection",
+              
+              tags$input(
+                type = "radio",
+                class = "btn-check shiny-input-radiogroup",
+                name = session$ns("scenario_choice"),
+                id = session$ns("scenario_worst"),
+                value = "worst"
+              ),
+              tags$label(
+                class = "btn btn-outline-danger opacity-75",
+                `for` = session$ns("scenario_worst"),
+                "Pessimistic case"
+              ),
+              
+              tags$input(
+                type = "radio",
+                class = "btn-check shiny-input-radiogroup",
+                name = session$ns("scenario_choice"),
+                id = session$ns("scenario_medium"),
+                value = "medium",
+                checked = "checked"
+              ),
+              tags$label(
+                class = "btn btn-outline-warning opacity-75",
+                `for` = session$ns("scenario_medium"),
+                "Medium case"
+              ),
+              
+              tags$input(
+                type = "radio",
+                class = "btn-check shiny-input-radiogroup",
+                name = session$ns("scenario_choice"),
+                id = session$ns("scenario_best"),
+                value = "best"
+              ),
+              tags$label(
+                class = "btn btn-outline-success opacity-75",
+                `for` = session$ns("scenario_best"),
+                "Optimum case"
+              )
+            ),
+            
+            tags$script(HTML(sprintf("
                 $(document).ready(function() {
                   var radioName = '%s';
                   $('input[name=\"' + radioName + '\"]').on('change', function() {
@@ -730,16 +945,54 @@ generation_server <- function(id, state) {
                       Shiny.setInputValue(radioName, this.value);
                     }
                   });
-                  // Set initial value
                   var checkedRadio = $('input[name=\"' + radioName + '\"]:checked');
                   if (checkedRadio.length > 0) {
                     Shiny.setInputValue(radioName, checkedRadio.val());
                   }
                 });
               ", session$ns("scenario_choice"))))
-    )))
+          )
+        )
+      )
+      
+      
+      
+      # Only policy simulation
+      if ("policy_simulation" %in% choices && !("forecasts" %in% choices)) {
+        return(section1_plot)
       }
-  })
+      
+      # Only forecasts
+      if ("forecasts" %in% choices && !("policy_simulation" %in% choices)) {
+        return(section2_ui)
+      }
+      
+      
+      if (all(c("policy_simulation", "forecasts") %in% choices)) {
+        
+        return(
+          tagList(
+            h4("Policy Simulation and Forecasts", class="fw-bold mb-3"),
+            
+            # Section 1 output
+            div(
+              class="mb-4",
+              h5("Policy Simulation"),
+              section1_plot
+            ),
+            
+            # Section 2 output
+            div(
+              class="mt-4",
+              h5("Forecast Configuration"),
+              section2_ui
+            )
+          )
+        )
+      }
+      
+    })
+    
 
 #---daily and monthly SNSP (historical data)
     prediction_schedule <- tibble::tibble(
@@ -1121,47 +1374,84 @@ generation_server <- function(id, state) {
         dev.off()
       }
     )
-
+   
 #---model-based predictions
     results <- local({
-      file <- "./data/results_all_vars.rda"
-      env <- new.env()
+      file <- "./data/results_xgb_all.rda"
+      env  <- new.env()
       load(file, envir = env)
-      env$results
+      env$results_full
     })
     
-    # results_lm <- list()
-    # for (v in vars) {
-    #   message("Fitting Linear model for: ", v)
-    #   min_date <- if (v %in% c("sum_import", "sum_export")) "2022-01-01" else NULL
-    #   
-    #   results_lm[[v]] <- run_lm_forecast(
-    #     monthly_df, target = v, val_year = val_year, h = h,
-    #     min_train_date = min_date
-    #   )
-    # }
+    results_last3 <- local({
+      file <- "./data/results_xgb_all.rda"
+      env  <- new.env()
+      load(file, envir = env)
+      env$results_last3
+    })
     
     output$all_forecast_plots <- renderUI({
-      plot_list <- lapply(names(results), function(varname) {
+      vars_full  <- if (!is.null(results)) names(results) else character(0)
+      vars_last3 <- if (!is.null(results_last3)) names(results_last3) else character(0)
+      varnames   <- union(vars_full, vars_last3)
+      
+      plot_list <- lapply(varnames, function(varname) {
+        
+        has_full  <- !is.null(results)       && !is.null(results[[varname]])
+        has_last3 <- !is.null(results_last3) && !is.null(results_last3[[varname]])
+        
         tagList(
-          plotOutput(session$ns(paste0("plot_xgb_", varname)), height = "350px"),
-          tags$br(),
+          h3(nice_names[[varname]] %||% varname, style = "margin-top:40px; color:#355070;"),
           
-          # h4("Linear Model Forecast"),
-          # plotOutput(session$ns(paste0("plot_lm_", varname)), height = "350px"),
-          # tags$hr()
+          div(
+            style = "display:flex; justify-content:space-between; font-weight:bold; margin-bottom:10px;",
+            div("Full Training (2014–2025)",  style="width:48%; text-align:center;"),
+            div("Training 2023–2025",         style="width:48%; text-align:center;")
+          ),
+          
+          div(
+            style = "
+        display:flex;
+        gap:20px;
+        border-bottom:1px solid #ccc;
+        padding-bottom:20px;
+        margin-bottom:30px;
+      ",
+            
+            div(
+              style = "width:48%;",
+              if (has_full) {
+                plotOutput(session$ns(paste0("plot_xgb_full_", varname)), height = '350px')
+              }
+            ),
+            
+            div(
+              style = "width:48%; border-left:1px solid #ddd; padding-left:20px;",
+              if (has_last3) {
+                plotOutput(session$ns(paste0("plot_xgb_last3_", varname)), height = '350px')
+              }
+            )
+          )
         )
       })
       
-      for (v in names(results)) {
+      
+      for (v in vars_full) {
         local({
           vn <- v
-          output[[paste0("plot_xgb_", vn)]] <- renderPlot({
+          output[[paste0("plot_xgb_full_", vn)]] <- renderPlot({
+            req(results[[vn]])
             plot_fc(results[[vn]], vn)
           })
-          
-          output[[paste0("plot_lm_", vn)]] <- renderPlot({
-            plot_fc_lm(results_lm[[vn]], vn)
+        })
+      }
+      
+      for (v in vars_last3) {
+        local({
+          vn <- v
+          output[[paste0("plot_xgb_last3_", vn)]] <- renderPlot({
+            req(results_last3[[vn]])
+            plot_fc_last3(results_last3[[vn]], vn)
           })
         })
       }
@@ -1191,6 +1481,7 @@ generation_server <- function(id, state) {
           `Generated RES` = (sum_wind + sum_solar),
           `Available RES` = (sum_avai_wind + sum_avai_solar),
            Target = `Generated RES` / sum_demand,
+          Target = pmin(Target, 1),
           `Dispatch Down` = `Available RES` - `Generated RES`
         ) %>%
         rename_with(~ nice_names[.x], .cols = names(nice_names)) %>%
@@ -1218,6 +1509,7 @@ generation_server <- function(id, state) {
       
       snsp <- (RES + Import)/(Demand + Export)
       target <- RES / Demand
+      Target = pmin(Target, 1)
 
       data.frame(
         Metric = c("SNSP",
@@ -1287,8 +1579,8 @@ generation_server <- function(id, state) {
         dplyr::filter(!is.na(source), !is.na(category))
       
       source_colors <- c(
-        "Wind"  = "#1f77b4",  
-        "Solar" = "#e6550d"  
+        "Wind"  = "#3d405b",  
+        "Solar" = "#e07a5f"  
       )
       
       line_types <- c(
@@ -1387,7 +1679,7 @@ generation_server <- function(id, state) {
             click <- input[[paste0("plot_click_", vn, "_click")]]
             if (!is.null(click$x)) {
               df_dates <- results[[vn]]$forecast$date
-              df_dates <- as.Date(df_dates, origin = if (is.numeric(df_dates)) "1970-01-01" else NULL)
+              # df_dates <- as.Date(df_dates, origin = if (is.numeric(df_dates)) "1970-01-01" else NULL)
               selected_date2(snap_to_nearest_date(click$x, df_dates))
             }
           }, ignoreInit = TRUE)
@@ -1457,10 +1749,28 @@ generation_server <- function(id, state) {
         {
           fc  <- results$sum_demand$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
-          col <- pick_fc_col(fc, "hi95")
-          hi95_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          col <- pick_fc_col(fc, "pred")
+          med_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
-            mutate(sum_demand = dplyr::coalesce(hi95_demand, sum_demand))
+            mutate(sum_demand = dplyr::coalesce(med_demand, sum_demand))
+        }
+        
+        {
+          fc  <- results$sum_avai_solar$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_avai_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_solar = dplyr::coalesce(lo95_avai_solar, sum_avai_solar))
+        }
+        
+        {
+          fc  <- results$sum_avai_wind$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_wind = dplyr::coalesce(lo95_avai_wind, sum_avai_wind))
         }
       }
       
@@ -1468,7 +1778,7 @@ generation_server <- function(id, state) {
         {
           fc  <- results$sum_solar$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
-          col <- pick_fc_col(fc, "hi95") 
+          col <- pick_fc_col(fc, "hi95")
           hi95_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
             mutate(sum_solar = dplyr::coalesce(hi95_solar, sum_solar))
@@ -1486,23 +1796,42 @@ generation_server <- function(id, state) {
         {
           fc  <- results$sum_demand$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
-          col <- pick_fc_col(fc, "lo95")
-          lo95_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          col <- pick_fc_col(fc, "pred")
+          med_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
-            mutate(sum_demand = dplyr::coalesce(lo95_demand, sum_demand))
+            mutate(sum_demand = dplyr::coalesce(med_demand, sum_demand))
+        }
+        
+        {
+          fc  <- results$sum_avai_solar$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_avai_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_solar = dplyr::coalesce(hi95_avai_solar, sum_avai_solar))
+        }
+        
+        {
+          fc  <- results$sum_avai_wind$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_avai_wind = dplyr::coalesce(hi95_avai_wind, sum_avai_wind))
         }
       }
       
       #apply policies
       df_all <- df_all %>%
-        mutate(`Generated RES` = sum_wind + sum_solar)
+        mutate(`Generated RES` = sum_wind + sum_solar,
+               `Available RES` = sum_avai_wind + sum_avai_solar)
       
      
       if (isTRUE(input$downward_regulation)) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 50,
+                                     `Generated RES` + (50 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1510,7 +1839,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 75,
+                                     `Generated RES` + (75 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1518,7 +1847,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 100,
+                                     `Generated RES` + (60 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1526,7 +1855,7 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2027-02-01"),
-                                     `Generated RES` + 100,
+                                     `Generated RES` + (100 * 24 * 30),
                                      `Generated RES`)
           )
       }
@@ -1534,54 +1863,130 @@ generation_server <- function(id, state) {
         df_all <- df_all %>%
           mutate(
             `Generated RES` = ifelse(date >= as.Date("2029-01-01"),
-                                     `Generated RES` + 100,
+                                     `Generated RES` + (100 * 24 * 30),
                                      `Generated RES`)
           )
       }
       if (isTRUE(input$reduce_moyle)) {
         df_all <- df_all %>%
           mutate(
-            `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 850,
-                                     `Generated RES`)
-          )
+            sum_import = ifelse(date >= as.Date("2026-01-01"),
+                                sum_import - (450 * 24 * 30),
+                                sum_import),
+            sum_export = ifelse(date >= as.Date("2026-01-01"),
+                                sum_export + (400 * 24 * 30),
+                                sum_export),
+            # `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
+            #                          `Generated RES` + (850 * 24 * 30),
+            #                          `Generated RES`)
+          ) %>%
+          mutate(sum_import = if_else(is.na(sum_import), NA_real_, pmax(sum_import, 0)))
       }
       if (isTRUE(input$ldes)) {
         df_all <- df_all %>%
           mutate(
-            `Generated RES` = ifelse(date >= as.Date("2027-04-01"),
-                                     `Generated RES` + 600,
+            `Generated RES` = ifelse(date >= as.Date("2030-10-01"),
+                                     `Generated RES` + (500 * 24 * 30),
                                      `Generated RES`)
           )
       }
       if (isTRUE(input$sn_interconnector)) {
         df_all <- df_all %>%
           mutate(
-            `Generated RES` = ifelse(date >= as.Date("2026-01-01"),
-                                     `Generated RES` + 900,
+            `Generated RES` = ifelse(date >= as.Date("2031-01-01"),
+                                     `Generated RES` + (900 * 24 * 30),
                                      `Generated RES`)
           )
       }
-      if (isTRUE(input$`scenario_input_choice`=='policy_simulation')) {
+      # if ("policy_simulation" %in% input$scenario_input_choice) {
+      #   
+      #   print(names(df_all))
+      #   print(names(new_renewables_reactive()))
+      #   
+      #   new_renewables_wider <- pivot_wider(new_renewables_reactive(),
+      #                                       id_cols = finished, 
+      #                                      names_from = tech, 
+      #                                      values_from = cumMW)
+      #   
+      #   start_dates <- new_renewables_wider %>%
+      #     summarise(
+      #       wind_onshore_start = min(finished[`Wind Onshore` > 0], na.rm = TRUE),
+      #       wind_offshore_start = min(finished[`Wind Offshore` > 0], na.rm = TRUE),
+      #       solar_start         = min(finished[`Solar Photovoltaics` > 0], na.rm = TRUE)
+      #     )
+      #   
+      #   
+      #   df_all <- df_all %>%
+      #     left_join(new_renewables_wider,by = c('date'='finished')) %>% 
+      #     mutate(
+      #       `Available RES` = `Available RES` +  `Wind Onshore` + `Wind Offshore` + `Solar Photovoltaics`
+      #     )
+      # }
+      
+      
+      if ("policy_simulation" %in% input$scenario_input_choice) {
         
-        print(names(df_all))
-        print(names(new_renewables_reactive()))
+        # 1) Start from project-level data (NOT floored to month)
+        current_projects_projected_forward <- read.csv('current_projects_projected_forward.csv')
+        offshore_wind <- read.csv('offshore_wind.csv')
+        forward_projects <- read.csv('forward_projects.csv')
+        projects <- bind_rows(
+          current_projects_projected_forward,
+          forward_projects
+        ) %>%
+          filter(passed_planning, passed_connection, passed_construction) %>%
+          transmute(
+            tech,
+            start = as.Date(passed_construction_date),
+            MW    = `Installed.Capacity..MWelec.`
+          ) %>%
+          mutate(tech = recode(tech,
+                               "Wind Offshore" = "Wind Offshore",
+                               "Wind Onshore"  = "Wind Onshore",
+                               "Solar Photovoltaics" = "Solar Photovoltaics"))
         
+        end_date <- as.Date("2030-12-31")
         new_renewables_wider <- pivot_wider(new_renewables_reactive(),
-                                            id_cols = finished, 
-                                           names_from = tech, 
-                                           values_from = cumMW) 
+                                            id_cols = finished,
+                                            names_from = tech,
+                                            values_from = cumMW)
+        # Capacity factors
+        
+        
+        monthly_hours <- function(date) {
+          lubridate::days_in_month(date) * 24
+        }
+        
+        policy_mwh <- df_all %>%
+          select(date) %>%
+          left_join(new_renewables_wider, by = c("date" = "finished")) %>%
+          mutate(
+            across(c(`Wind Onshore`, `Wind Offshore`, `Solar Photovoltaics`),
+                   ~replace_na(.x, 0))
+          ) %>%
+          mutate(
+            hours = monthly_hours(date),
+            mwh_onshore  = `Wind Onshore`        * hours ,
+            mwh_offshore = `Wind Offshore`       * hours ,
+            mwh_solar    = `Solar Photovoltaics` * hours ,
+            RES_MWh_policy = mwh_onshore + mwh_offshore + mwh_solar
+          )
+        
+        
         
         df_all <- df_all %>%
-          left_join(new_renewables_wider,by = c('date'='finished')) %>% 
+          left_join(policy_mwh, by = "date") %>%
+          mutate(across(c(mwh_onshore, mwh_offshore, mwh_solar, RES_MWh_policy),
+                        ~replace_na(.x, 0))) %>%
           mutate(
-            `Generated RES` = `Generated RES` + `Wind Onshore` + `Wind Offshore` + `Solar Photovoltaics`
+            `Available RES` = `Available RES` + RES_MWh_policy
           )
       }
       
+      
       df_all <- df_all %>%
         mutate(
-          Target = `Generated RES` / sum_demand,
+          `Generated RES` = pmin(`Generated RES`, `Available RES`, na.rm = FALSE),
           SNSP   = (`Generated RES`  + sum_import) / (sum_demand + sum_export),
           
           `Planned SNSP` = case_when(
@@ -1590,26 +1995,53 @@ generation_server <- function(id, state) {
             lubridate::year(date) == 2030 ~ 0.90,
             TRUE ~ NA_real_
           ),
-          # `Generated RES` = sum_res,
-          `Dispatch Down Wind`  = sum_avai_wind  - sum_wind,
-          `Dispatch Down Solar` = sum_avai_solar - sum_solar,
-          .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
           
-          Curtailment = if_else(
-            .dd_total > 0,
-            (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
-            NA_real_
-          ),
-          Constraint = if_else(
-            .dd_total > 0,
-            (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
-            NA_real_
-          ),
+          # `Generated RES` = sum_res,
+          # `Dispatch Down Wind`  = sum_avai_wind  - sum_wind,
+          # `Dispatch Down Solar` = sum_avai_solar - sum_solar,
+          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+          
+          # Curtailment = if_else(
+          #   .dd_total > 0,
+          #   (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
+          #   NA_real_
+          # ),
+          # Constraint = if_else(
+          #   .dd_total > 0,
+          #   (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
+          #   NA_real_
+          # ),
+          `Dispatch Down` = `Available RES` - `Generated RES`,
+          # `Dispatch Down` = pmax(`Dispatch Down`, 0),
+          
           
           `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")
         ) %>%
-        select(-.dd_total) %>%
-        rename_with(~ nice_names[.x], .cols = names(nice_names)) %>%
+        mutate(
+          possible_res = `Planned SNSP` * (sum_demand + sum_export) - sum_import,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Dispatch Down` + `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            pmin(possible_res, `Generated RES`),
+            `Generated RES`
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
+          
+        ) %>%
+        mutate( 
+          Target = `Generated RES` / sum_demand,
+          Target = pmin(Target, 1)
+        ) %>%
+        mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE),) %>%
+        select(- possible_res) %>%
+        rename_with(~ nice_names[.x], .cols = names(nice_names))
+      
+      df_all <- df_all %>%
         mutate(date = format(date, "%Y-%m-%d"))
     })
     
@@ -1630,34 +2062,50 @@ generation_server <- function(id, state) {
       e_title('Imports and Exports')
     })
     
-    output$combined_forecast_table_ci_plot_generated_renewable <- renderEcharts4r({
+    
+    output$combined_forecast_table_ci_plot_generated_available <- renderEcharts4r({
       dt <- combined_forecast_ci()
       
       dt %>% 
         mutate(exports = -1* Exports) %>% 
         e_charts(date) %>% 
-        e_area(`Generated Solar`, stack = 'f', color='cornflowerblue', emphasis = list(focus= 'series')) %>% 
-        e_area(`Generated Wind`, stack = 'f', color='#FFDE21',emphasis = list(focus= 'series')) %>% 
-        e_line(`Generated RES`, color='grey',emphasis = list(focus= 'series')) %>% 
+        e_area(`Generated RES`, stack = 'f', color='cornflowerblue', emphasis = list(focus= 'series')) %>% 
+        e_line(`Available RES`, color='grey',emphasis = list(focus= 'series')) %>% 
         e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
         e_y_axis(name = 'MWh') %>%
         e_theme('walden') %>% 
-        e_title('Generation')
+        e_title('Available vs Generation')
     })
     
-    output$combined_forecast_table_ci_plot_available_renewable <- renderEcharts4r({
-      dt <- combined_forecast_ci()
-      
-      dt %>% 
-        mutate(exports = -1* Exports) %>% 
-        e_charts(date) %>% 
-        e_area(`Available Solar`, stack = 'f', color='cornflowerblue',emphasis = list(focus= 'series')) %>% 
-        e_area(`Available Wind`, stack = 'f', color='#FFDE21',emphasis = list(focus= 'series')) %>% 
-        e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
-        e_y_axis(label = 'MWh') %>%
-        e_theme('walden') %>% 
-        e_title('Available')
-    })
+    
+    # output$combined_forecast_table_ci_plot_generated_renewable <- renderEcharts4r({
+    #   dt <- combined_forecast_ci()
+    #   
+    #   dt %>% 
+    #     mutate(exports = -1* Exports) %>% 
+    #     e_charts(date) %>% 
+    #     e_area(`Generated Solar`, stack = 'f', color='cornflowerblue', emphasis = list(focus= 'series')) %>% 
+    #     e_area(`Generated Wind`, stack = 'f', color='#FFDE21',emphasis = list(focus= 'series')) %>% 
+    #     e_line(`Generated RES`, color='grey',emphasis = list(focus= 'series')) %>% 
+    #     e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
+    #     e_y_axis(name = 'MWh') %>%
+    #     e_theme('walden') %>% 
+    #     e_title('Generation')
+    # })
+    # 
+    # output$combined_forecast_table_ci_plot_available_renewable <- renderEcharts4r({
+    #   dt <- combined_forecast_ci()
+    #   
+    #   dt %>% 
+    #     mutate(exports = -1* Exports) %>% 
+    #     e_charts(date) %>% 
+    #     e_area(`Available Solar`, stack = 'f', color='cornflowerblue',emphasis = list(focus= 'series')) %>% 
+    #     e_area(`Available Wind`, stack = 'f', color='#FFDE21',emphasis = list(focus= 'series')) %>% 
+    #     e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
+    #     e_y_axis(label = 'MWh') %>%
+    #     e_theme('walden') %>% 
+    #     e_title('Available')
+    # })
     
     output$combined_forecast_table_ci_plot_percentage_renewable <- renderEcharts4r({
       dt <- combined_forecast_ci()
@@ -1666,11 +2114,10 @@ generation_server <- function(id, state) {
       #   e_scatter(y)
       dt %>%
         mutate(
-          perc_solar = `Generated Solar` / `Available Solar`*100,
-          perc_wind = `Generated Wind` / `Available Wind`*100) %>%
+          perc_res = `Generated RES` / `Available RES`*100) %>%
         e_charts(date) %>%
-        e_line(perc_solar,  color='#FFDE21', name = 'Availability of Solar', emphasis = list(focus= 'series')) %>%  # #FFDE21
-        e_line(perc_wind,  color='cornflowerblue',name = 'Availability of Wind', emphasis = list(focus= 'series')) %>%
+        e_line(perc_res,  color='#FFDE21', name = 'Availability of Renewable', emphasis = list(focus= 'series')) %>%  # #FFDE21
+        # e_line(perc_wind,  color='cornflowerblue',name = 'Availability of Wind', emphasis = list(focus= 'series')) %>%
         e_format_y_axis(suffix='%') %>%
         e_mark_line(data = list(name= 'Theoretical Max',
                                 yAxis= 100),
@@ -1678,7 +2125,7 @@ generation_server <- function(id, state) {
         e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
         e_x_axis(label = 'Time', type='time') %>%
         e_theme('walden') %>% 
-        e_title('Constraint and Curtailment', 'Availability - Generation')
+        e_title('Dispatch Down', 'Availability - Generation')
         
     })
     
@@ -1690,9 +2137,23 @@ generation_server <- function(id, state) {
       
       dt %>%
       e_charts(date) %>%
-      e_bar(`Dispatch Down Wind`,color='salmon', stack = 'f', name = 'Dispatch Down Wind',emphasis = list(focus= 'series')) %>%
+        
+        e_bar(Curtailment,
+              stack = "dd",
+              name = "Curtailment",
+              color = "firebrick",
+              emphasis = list(focus = 'series')
+        ) %>%
+        e_bar(Constraint,
+              stack = "dd",
+              name = "Constraint",
+              color = "salmon",
+              emphasis = list(focus = 'series')
+        ) %>%
+        
+      # e_bar(`Dispatch Down`,color='salmon', stack = 'f', name = 'Dispatch Down',emphasis = list(focus= 'series')) %>%
       # e_line(Dispatch.Down.Wind,color='salmon', stack = 'h') %>%
-      e_bar(`Dispatch Down Solar`,color='firebrick', stack = 'f', name = 'Dispatch Down Solar',emphasis = list(focus= 'series')) %>%
+      # e_bar(`Dispatch Down Solar`,color='firebrick', stack = 'f', name = 'Dispatch Down Solar',emphasis = list(focus= 'series')) %>%
       # e_line(Dispatch.Down.Solar,color='lightcoral', stack = 'h') %>%
       e_x_axis(name = 'Time', type='time') %>%
       # e_loess(formula = Dispatch.Down.Solar~date,color='black') %>%
@@ -1711,11 +2172,13 @@ generation_server <- function(id, state) {
         e_line(Target,endLabel = list(show = F),emphasis = list(focus='series')) %>% # formatter = '{a}'  # #FFDE21
         e_line(SNSP,itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
         e_line(`Planned SNSP`, lineStyle = list(type='dashed'), itemStyle = list(opacity=0),emphasis = list(focus='series')) %>%  # #FFDE21
-        e_line(Curtailment, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
-        e_line(Constraint, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        # e_line(Curtailment, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        # e_line(Constraint, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>%
+        # e_line(`Available RES`, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
+        # e_line(`Generated RES`, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
         e_x_axis(type = 'time' ,max = "2030-12-01") %>%
    
-        e_color(c('black','red', 'lightcoral',  'royalblue', 'steelblue')) %>%
+        e_color(c('black','red', 'lightcoral',  'royalblue', 'steelblue', '#b3d89c','#9dc3c2')) %>%
         e_annotations(default_color = 'grey',
                       legend = F,
                       name = 'Target',
@@ -1748,10 +2211,53 @@ generation_server <- function(id, state) {
       }
     )
     
+    # output$selected_date_kpis <- renderTable({
+    #   df <- combined_forecast_ci()
+    #   sd <- selected_date2()
+    # 
+    #   if (is.null(sd)) {
+    #     return(data.frame(
+    #       Metric = c("Selected date"),
+    #       Value  = c("—"),
+    #       check.names = FALSE, stringsAsFactors = FALSE
+    #     ))
+    #   }
+    # 
+    #   df$date <- as.Date(df$date)
+    #   row <- df[df$date == sd, , drop = FALSE]
+    # 
+    #   if (nrow(row) == 0) {
+    #     return(data.frame(
+    #       Metric = c("Selected date"),
+    #       Value  = c("No data for selected date"),
+    #       check.names = FALSE, stringsAsFactors = FALSE
+    #     ))
+    #   }
+    # 
+    #   target          <- row$Target
+    #   `Dispatch Down` <- row$`Dispatch Down Wind` + row$`Dispatch Down Solar`
+    # 
+    #   data.frame(
+    #     Metric = c("Target", "Dispatch Down"),
+    #     Value = c(
+    #       format(target,    big.mark = ",", scientific = FALSE),
+    #       format(round(`Dispatch Down`),    big.mark = ",", scientific = FALSE)
+    #     ),
+    #     check.names = FALSE, stringsAsFactors = FALSE
+    #   )
+    # }, digits = 3, rownames = FALSE)
+    
     output$selected_date_kpis <- renderTable({
       df <- combined_forecast_ci()
+
+      # 1) Make sure we have data
+      validate(need(nrow(df) > 0, "Forecast data not available yet."))
+
+      # 2) Ensure 'date' is Date (combined_forecast_ci() ends with character date "YYYY-MM-DD")
+      df$date <- as.Date(df$date)
+
+      # 3) Ensure the clicked selection is also Date
       sd <- selected_date2()
-      
       if (is.null(sd)) {
         return(data.frame(
           Metric = c("Selected date"),
@@ -1759,10 +2265,10 @@ generation_server <- function(id, state) {
           check.names = FALSE, stringsAsFactors = FALSE
         ))
       }
-      
-      df$date <- as.Date(df$date)
+      sd <- as.Date(sd)   # <---- important
+
+      # 4) Pull the row for the selected date
       row <- df[df$date == sd, , drop = FALSE]
-      
       if (nrow(row) == 0) {
         return(data.frame(
           Metric = c("Selected date"),
@@ -1770,15 +2276,47 @@ generation_server <- function(id, state) {
           check.names = FALSE, stringsAsFactors = FALSE
         ))
       }
-      
-      target          <- row$Target 
-      `Dispatch Down` <- row$`Dispatch Down Wind` + row$`Dispatch Down Solar`
-      
+
+      nm <- names(row)
+
+      # 5) Target: use the renamed column if present; otherwise recompute
+      target_val <- if ("Target" %in% nm) {
+        row[["Target"]]
+      } else if (all(c("Generated RES","Demand") %in% nm)) {
+        suppressWarnings(row[["Generated RES"]] / row[["Demand"]])
+      } else {
+        NA_real_
+      }
+
+      # 6) Dispatch Down: prefer the aggregate (policy/SNSP‑aware) if present
+      dd_val <- NULL
+      if ("Dispatch Down" %in% nm) {
+        dd_val <- row[["Dispatch Down"]]
+      } else {
+        # fallback to per-tech sum if they exist under the *post‑rename* names
+        # try the raw names first
+        wind_nm  <- intersect(nm, c("Dispatch Down Wind"))
+        solar_nm <- intersect(nm, c("Dispatch Down Solar"))
+
+        # if nice_names renamed them, try to map via nice_names
+        if (length(wind_nm) == 0 && exists("nice_names")) {
+          mapped_wind  <- unname(nice_names[["Dispatch Down Wind"]])
+          mapped_solar <- unname(nice_names[["Dispatch Down Solar"]])
+          wind_nm  <- intersect(nm, mapped_wind)
+          solar_nm <- intersect(nm, mapped_solar)
+        }
+
+        wind_dd  <- if (length(wind_nm))  row[[wind_nm[1]]]  else 0
+        solar_dd <- if (length(solar_nm)) row[[solar_nm[1]]] else 0
+        dd_val   <- wind_dd + solar_dd
+      }
+
       data.frame(
-        Metric = c("Target", "Dispatch Down"),
+        Metric = c("Selected date", "Target (%)", "Dispatch Down (MWh)"),
         Value = c(
-          format(target,    big.mark = ",", scientific = FALSE),
-          format(round(`Dispatch Down`),    big.mark = ",", scientific = FALSE)
+          format(sd, "%Y-%m-%d"),
+          if (is.na(target_val)) "—" else sprintf("%.1f", 100 * target_val),
+          format(round(dd_val), big.mark = ",", scientific = FALSE)
         ),
         check.names = FALSE, stringsAsFactors = FALSE
       )
@@ -1801,11 +2339,12 @@ generation_server <- function(id, state) {
       yearly_df <- df %>%
         filter(year ==2030) %>% 
         group_by(year) %>%
-        summarise(across(which(num_cols), mean, na.rm = TRUE)) %>%
+        summarise(across(which(num_cols), sum, na.rm = TRUE)) %>%
         
         
         mutate(
           Target = `Generated RES` / `Demand`,
+          Target = pmin(Target, 1),
           SNSP   = (`Generated RES` + `Imports`) /
             (`Demand` + `Exports`)
         ) %>%
@@ -1818,20 +2357,44 @@ generation_server <- function(id, state) {
             TRUE                       ~ NA_real_
           )
         ) %>%
-        mutate(.dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+        mutate(
+          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+          #      
+          #      Curtailment = if_else(
+          #        .dd_total > 0,
+          #        (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
+          #        NA_real_
+          #      ),
+          #      Constraint = if_else(
+          #        .dd_total > 0,
+          #        (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
+          #        NA_real_
+          #      ),
+          
                
-               Curtailment = if_else(
-                 .dd_total > 0,
-                 (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
-                 NA_real_
-               ),
-               Constraint = if_else(
-                 .dd_total > 0,
-                 (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
-                 NA_real_
-               ),
-               
-               `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))
+               `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))%>%
+        mutate(
+          possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            possible_res,
+            `Generated RES`
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
+          
+        ) %>%
+        mutate(
+               `Cumulative Demand (MWh)` = cumsum(`Demand`),
+               `Cumulative RES (MWh)`    = cumsum(`Generated RES`),
+               `Cumulative Dispatch Down (MWh)` = cumsum(`Dispatch Down`)
+               ) %>%
+        mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
       # page_fluid(
       #   icon('arrow-right',class= 'visually-hidden'),
       
@@ -1880,7 +2443,7 @@ generation_server <- function(id, state) {
                                                   
                                                   div(style = 'border-style: double', 
                                                       class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
-                                                      h5(class = 'fw-bold','MW',f(.dd_total)))
+                                                      h5(class = 'fw-bold','MW',f(`Dispatch Down`)))
                                                   
         ))) %>%
         select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
@@ -1902,15 +2465,17 @@ generation_server <- function(id, state) {
       df$date <- as.Date(df$date)
       
       df$year <- format(df$date, "%Y")
+      df <- df %>% dplyr::filter(year >= 2026)
       
       num_cols <- sapply(df, is.numeric)
       
       yearly_df <- df %>%
         group_by(year) %>%
-        summarise(across(which(num_cols), mean, na.rm = TRUE)) %>%
+        summarise(across(which(num_cols), sum, na.rm = TRUE)) %>%
         
         mutate(
           Target = `Generated RES` / `Demand`,
+          Target = pmin(Target, 1),
           SNSP   = (`Generated RES` + `Imports`) /
             (`Demand` + `Exports`)
         ) %>%
@@ -1923,20 +2488,38 @@ generation_server <- function(id, state) {
             TRUE                       ~ NA_real_
           )
         ) %>%
-        mutate(.dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+        mutate(
+          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+          #      
+          #      Curtailment = if_else(
+          #        .dd_total > 0,
+          #        (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
+          #        NA_real_
+          #      ),
+          #      Constraint = if_else(
+          #        .dd_total > 0,
+          #        (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
+          #        NA_real_
+          #      ),
                
-               Curtailment = if_else(
-                 .dd_total > 0,
-                 (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
-                 NA_real_
-               ),
-               Constraint = if_else(
-                 .dd_total > 0,
-                 (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
-                 NA_real_
-               ),
-               
-               `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))
+        `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")) %>%
+        mutate(
+          possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            possible_res,
+            `Generated RES`
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
+          
+        ) %>%
+        mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
       # page_fluid(
       #   icon('arrow-right',class= 'visually-hidden'),
       
@@ -1985,7 +2568,7 @@ generation_server <- function(id, state) {
             
             div(style = 'border-style: double', 
                 class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
-                h5(class = 'fw-bold','MW',f(.dd_total)))
+                h5(class = 'fw-bold','MW',f(`Dispatch Down`)))
             
           ))) %>%
           select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
@@ -2012,6 +2595,7 @@ generation_server <- function(id, state) {
         
         mutate(
           Target = `Generated RES` / `Demand`,
+          Target = pmin(Target, 1),
           SNSP   = (`Generated RES` + `Imports`) /
             (`Demand` + `Exports`)
         ) %>%
@@ -2024,20 +2608,39 @@ generation_server <- function(id, state) {
             TRUE                       ~ NA_real_
           )
         ) %>%
-        mutate(.dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+        mutate(
+          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
           
-          Curtailment = if_else(
-            .dd_total > 0,
-            (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
-            NA_real_
-          ),
-          Constraint = if_else(
-            .dd_total > 0,
-            (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
-            NA_real_
-          ),
+          # Curtailment = if_else(
+          #   .dd_total > 0,
+          #   (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
+          #   NA_real_
+          # ),
+          # Constraint = if_else(
+          #   .dd_total > 0,
+          #   (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
+          #   NA_real_
+          # ),
           
-          `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))
+          `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))%>%
+        mutate(
+          possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            possible_res,
+            `Generated RES`
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
+          
+        ) %>%
+          
+        mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
       
       yearly_df
     }, digits = 3, rownames = FALSE)

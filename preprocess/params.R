@@ -12,6 +12,11 @@ library(scales)
 library(shinydashboard)
 library(DT)
 library(rlang)
+library(timevis)
+library(bslib)
+library(echarts4r)
+library(reactable)
+library(reactablefmtr)
 
 
 nice_names <- c(
@@ -21,11 +26,12 @@ nice_names <- c(
   sum_avai_solar = "Available Solar",
   sum_solar = "Generated Solar",
   sum_avai_wind = "Available Wind",
-  sum_wind = "Generated Wind"
+  sum_wind = "Generated Wind",
+  sum_system_gen.y = "Fossil Fuel"
 )
 
 #load data
-load("./data/inputs.rda")
+load("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/inputs.rda")
 
 #ensure date type
 stopifnot(exists("combined_df"))
@@ -36,7 +42,7 @@ if (!"median_SNSP.x" %in% names(combined_df) && "median_SNSP" %in% names(combine
 }
 
 #variables to forecast
-candidate_vars <- c("sum_import", "sum_export", "sum_demand", "sum_avai_solar","sum_solar", "sum_avai_wind","sum_wind")
+candidate_vars <- c("sum_import", "sum_export", "sum_demand", "sum_avai_solar","sum_solar", "sum_avai_wind","sum_wind", "sum_system_gen.y")
 vars <- intersect(candidate_vars, names(combined_df))
 missing_vars <- setdiff(candidate_vars, vars)
 if (length(missing_vars)) {
@@ -45,19 +51,12 @@ if (length(missing_vars)) {
 if (length(vars) == 0) stop("None of the expected variables were found in combined_df.")
 
 #parameters
-agg_fun      <- mean        #it can change to sum or median
+agg_fun      <- sum        #it can change to sum or median
 val_year     <- 2025        #validation data
-h            <- 50          #forecast horizon
+h            <- 61          #forecast horizon
 max_lag      <- 12          #12 months of lags
 roll_windows <- c(3, 6, 12) #rolling mean windows
 seed         <- 2026
 
 set.seed(seed)
-
-
-
-
-
-
-
 
