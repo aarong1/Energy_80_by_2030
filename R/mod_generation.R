@@ -525,9 +525,9 @@ br(),br(),
         div( class="container",
         div( class="row",
           
-          div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_generated_available'))),
+          div(class="col-6",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_generated_available'))),
           # div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_available_renewable'))),
-          div(class="col-4",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_percentage_renewable')))
+          div(class="col-6",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_percentage_renewable')))
         ),
         div(class="row",
           div(class="col-6",echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_flow'))),
@@ -538,7 +538,7 @@ br(),br(),
                 div(echarts4rOutput( outputId = ns('combined_forecast_table_ci_plot_so_what')))
                 ))
         ),
-        div(sticky_side_bar())
+        div(sticky_side_bar(ns))
           ),
         # sticky_side_bar(),
         
@@ -556,6 +556,30 @@ br(),br(),
           DTOutput(ns("yearly_sums_table_dt"))
         )
       ),
+      
+        div(
+        class = "shadow-sm border-0 rounded-3 p-5 m-5",
+        tagList(
+          # Sticky header CSS and full width
+          tags$head(
+            tags$style(HTML("
+      .header-sticky { position: sticky; top: 0; background: white; z-index: 1; }
+      .reactable { width: 100% !important; }
+    "))
+          ),
+          h3("The cumulative values by end of 2030"),
+          fluidRow(
+            column(6,
+                   h4("Training 2014-2025"),
+                   gt_output(ns("sheet1_tbl"))
+            ),
+            column(6,
+                   h4("Training 2023-2025"),
+                   gt_output(ns("sheet2_tbl"))
+            )
+          )
+        )
+        ),
       
   
       
@@ -1461,8 +1485,8 @@ generation_server <- function(id, state) {
 
 #---table based on predicted values
     combined_forecast <- reactive({
-      tables <- lapply(names(results), function(varname) {
-        df <- results[[varname]]$forecast
+      tables <- lapply(names(results_last3), function(varname) {
+        df <- results_last3[[varname]]$forecast
 
         if (is.numeric(df$date)) {
           df$date <- as.Date(df$date, origin = "1970-01-01")
@@ -1509,7 +1533,7 @@ generation_server <- function(id, state) {
       
       snsp <- (RES + Import)/(Demand + Export)
       target <- RES / Demand
-      Target = pmin(Target, 1)
+      Target = pmin(target, 1)
 
       data.frame(
         Metric = c("SNSP",
@@ -1630,8 +1654,8 @@ generation_server <- function(id, state) {
     })
     
     output$interactive_trajectory_plots <- renderUI({
-      req(results)
-      vars <- names(results)                     
+      req(results_last3)
+      vars <- names(results_last3)                     
       plot_blocks <- lapply(seq_along(vars), function(i) {
         varname <- vars[i]                       
         tagList(
@@ -1669,8 +1693,8 @@ generation_server <- function(id, state) {
     })
     
     observe({
-      req(results)  
-      vars <- names(results)
+      req(results_last3)  
+      vars <- names(results_last3)
       
       for (v in vars) {
         local({
@@ -1678,14 +1702,14 @@ generation_server <- function(id, state) {
           observeEvent(input[[paste0("plot_click_", vn, "_click")]], {
             click <- input[[paste0("plot_click_", vn, "_click")]]
             if (!is.null(click$x)) {
-              df_dates <- results[[vn]]$forecast$date
+              df_dates <- results_last3[[vn]]$forecast$date
               # df_dates <- as.Date(df_dates, origin = if (is.numeric(df_dates)) "1970-01-01" else NULL)
               selected_date2(snap_to_nearest_date(click$x, df_dates))
             }
           }, ignoreInit = TRUE)
           
           output[[paste0("plot_click_", vn)]] <- renderPlot({
-            p <- plot_fc(results[[vn]], vn)  
+            p <- plot_fc(results_last3[[vn]], vn)  
             sd <- selected_date2()
             if (!is.null(sd)) {
               p <- p + ggplot2::geom_vline(
@@ -1702,16 +1726,16 @@ generation_server <- function(id, state) {
     })
     
     combined_forecast_ci <- reactive({
-      req(results)
+      req(results_last3)
       
-      vars <- names(results)
+      vars <- names(results_last3)
       choices <- setNames(
         lapply(vars, function(v) input[[paste0("ci_choice2_", v)]] %||% "pred"),
         vars
       )
       
       tables <- lapply(vars, function(varname) {
-        df <- results[[varname]]$forecast
+        df <- results_last3[[varname]]$forecast
         df$date <- as.Date(df$date, origin = "1970-01-01")
         
         value_col <- pick_fc_col(df, choices[[varname]])
@@ -1729,7 +1753,7 @@ generation_server <- function(id, state) {
       
       if (scenario == "worst") {
         {
-          fc  <- results$sum_solar$forecast
+          fc  <- results_last3$sum_solar$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "lo95")
           lo95_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1738,7 +1762,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_wind$forecast
+          fc  <- results_last3$sum_wind$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "lo95")
           lo95_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1747,7 +1771,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_demand$forecast
+          fc  <- results_last3$sum_demand$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "pred")
           med_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1756,7 +1780,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_avai_solar$forecast
+          fc  <- results_last3$sum_avai_solar$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "lo95")
           lo95_avai_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1765,7 +1789,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_avai_wind$forecast
+          fc  <- results_last3$sum_avai_wind$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "lo95")
           lo95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1776,7 +1800,7 @@ generation_server <- function(id, state) {
       
       if (scenario == "best") {
         {
-          fc  <- results$sum_solar$forecast
+          fc  <- results_last3$sum_solar$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "hi95")
           hi95_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1785,7 +1809,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_wind$forecast
+          fc  <- results_last3$sum_wind$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "hi95")
           hi95_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1794,7 +1818,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_demand$forecast
+          fc  <- results_last3$sum_demand$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "pred")
           med_demand <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1803,7 +1827,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_avai_solar$forecast
+          fc  <- results_last3$sum_avai_solar$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "hi95")
           hi95_avai_solar <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -1812,7 +1836,7 @@ generation_server <- function(id, state) {
         }
         
         {
-          fc  <- results$sum_avai_wind$forecast
+          fc  <- results_last3$sum_avai_wind$forecast
           fcd <- as.Date(fc$date, origin = "1970-01-01")
           col <- pick_fc_col(fc, "hi95")
           hi95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
@@ -2395,6 +2419,9 @@ generation_server <- function(id, state) {
                `Cumulative Dispatch Down (MWh)` = cumsum(`Dispatch Down`)
                ) %>%
         mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
+      
+      
+      
       # page_fluid(
       #   icon('arrow-right',class= 'visually-hidden'),
       
@@ -2423,7 +2450,7 @@ generation_server <- function(id, state) {
           .after = 3,Demand=as.character(tagList(div( class= 'm-1 p-1', 
                                                       icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
                                                       icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
-                                                      p(class='text-bg-dark p-1 rounded-2 m-1' ,' MW ' ,f(Demand), 
+                                                      p(class='text-bg-dark p-1 rounded-2 m-1' ,' MWh/year ' ,f(Demand), 
                                                         icon(class= 'text-centre','industry'),
                                                         icon(class= '','house')
                                                       )
@@ -2443,7 +2470,7 @@ generation_server <- function(id, state) {
                                                   
                                                   div(style = 'border-style: double', 
                                                       class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
-                                                      h5(class = 'fw-bold','MW',f(`Dispatch Down`)))
+                                                      h5(class = 'fw-bold','MWh/year',f(`Dispatch Down`)))
                                                   
         ))) %>%
         select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
@@ -2453,6 +2480,32 @@ generation_server <- function(id, state) {
                       rownames=F,
                       selection='none',
                       options = list(dom = '',ordering = FALSE,pageLength = 10, scrollX = TRUE))})
+    
+    
+    
+    last_year_target <- reactive({
+      df <- combined_forecast_ci()
+      df$date <- as.Date(df$date)
+      df$year <- format(df$date, "%Y")
+      
+      num_cols <- sapply(df, is.numeric)
+      
+      yearly_df <- df %>%
+        filter(year == 2030) %>%
+        group_by(year) %>%
+        summarise(across(which(num_cols), sum, na.rm = TRUE))
+    
+      target <- yearly_df$`Generated RES` / yearly_df$Demand
+      target <- min(target, 1)
+      
+      return(target)  
+    })
+    
+    output$last_year_target_pct <- renderText({
+      round(last_year_target() * 100)  
+    })
+    
+    
     
     
     output$yearly_sums_table_dt <- renderDT({
@@ -2519,6 +2572,11 @@ generation_server <- function(id, state) {
           Constraint = 0.83 * `Dispatch Down`,
           
         ) %>%
+        mutate(
+          `Cumulative Demand (MWh)` = cumsum(`Demand`),
+          `Cumulative RES (MWh)`    = cumsum(`Generated RES`),
+          `Cumulative Dispatch Down (MWh)` = cumsum(`Dispatch Down`)
+        ) %>%
         mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
       # page_fluid(
       #   icon('arrow-right',class= 'visually-hidden'),
@@ -2548,7 +2606,7 @@ generation_server <- function(id, state) {
             .after = 3,Demand=as.character(tagList(div( class= 'm-1 p-1', 
               icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
               icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
-              p(class='text-bg-dark p-1 rounded-2 m-1' ,' MW ' ,f(Demand), 
+              p(class='text-bg-dark p-1 rounded-2 m-1' ,' MWh/year ' ,f(Demand), 
               icon(class= 'text-centre','industry'),
               icon(class= '','house')
 )
@@ -2568,10 +2626,13 @@ generation_server <- function(id, state) {
             
             div(style = 'border-style: double', 
                 class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
-                h5(class = 'fw-bold','MW',f(`Dispatch Down`)))
+                h5(class = 'fw-bold','MWh/year',f(`Dispatch Down`)))
             
           ))) %>%
-          select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
+         # mutate(`Cumulative Demand (MWh)`) %>%
+          # select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`, `Cumulative Demand (MWh)`,
+          #        `Cumulative RES (MWh)`   ,`Cumulative Dispatch Down (MWh)`) %>% 
+          select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`) %>% 
           DT::datatable(height = '100vh',
                         escape = F, 
                         
@@ -2581,69 +2642,128 @@ generation_server <- function(id, state) {
       #)
     })
     
-    output$yearly_sums_table <- renderTable({
-      df <- combined_forecast_ci()
-      df$date <- as.Date(df$date)
-      
-      df$year <- format(df$date, "%Y")
-      
-      num_cols <- sapply(df, is.numeric)
-      
-      yearly_df <- df %>%
-        group_by(year) %>%
-        summarise(across(which(num_cols), mean, na.rm = TRUE)) %>%
-        
-        mutate(
-          Target = `Generated RES` / `Demand`,
-          Target = pmin(Target, 1),
-          SNSP   = (`Generated RES` + `Imports`) /
-            (`Demand` + `Exports`)
+    # output$yearly_sums_table <- renderTable({
+    #   df <- combined_forecast_ci()
+    #   df$date <- as.Date(df$date)
+    # 
+    #   df$year <- format(df$date, "%Y")
+    # 
+    #   num_cols <- sapply(df, is.numeric)
+    # 
+    #   yearly_df_2 <- df %>%
+    #     group_by(year) %>%
+    #     summarise(across(which(num_cols), mean, na.rm = TRUE)) %>%
+    # 
+    #     mutate(
+    #       Target = `Generated RES` / `Demand`,
+    #       Target = pmin(Target, 1),
+    #       SNSP   = (`Generated RES` + `Imports`) /
+    #         (`Demand` + `Exports`)
+    #     ) %>%
+    # 
+    #     mutate(
+    #       `Planned SNSP` = case_when(
+    #         year >= 2025 & year <= 2027 ~ 0.80,
+    #         year >= 2028 & year <= 2029 ~ 0.85,
+    #         year == 2030               ~ 0.90,
+    #         TRUE                       ~ NA_real_
+    #       )
+    #     ) %>%
+    #     mutate(
+    #       # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+    # 
+    #       # Curtailment = if_else(
+    #       #   .dd_total > 0,
+    #       #   (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
+    #       #   NA_real_
+    #       # ),
+    #       # Constraint = if_else(
+    #       #   .dd_total > 0,
+    #       #   (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
+    #       #   NA_real_
+    #       # ),
+    # 
+    #       `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))
+    #     # mutate(
+    #     #   possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
+    #     #   `Dispatch Down` = if_else(
+    #     #     `Curtailment SNSP` == "Curtailment SNSP",
+    #     #     `Generated RES` - possible_res,
+    #     #     `Dispatch Down`
+    #     #   ),
+    #     #   `Generated RES` = if_else(
+    #     #     `Curtailment SNSP` == "Curtailment SNSP",
+    #     #     possible_res,
+    #     #     `Generated RES`
+    #     #   ),
+    #     #   Curtailment = 0.17 * `Dispatch Down`,
+    #     #   Constraint = 0.83 * `Dispatch Down`,
+    #     # 
+    #     # ) %>%
+    #     # 
+    #     # mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
+    # 
+    #   yearly_df_2
+    #   }, digits = 3, rownames = FALSE)
+    
+    sheet1_df <- read_excel(
+      "./data/policy_uplift.xlsx",
+      sheet = "all_3"
+    )
+    
+    sheet2_df <- read_excel(
+      "./data/policy_uplift.xlsx",
+      sheet = "last3_3"
+    )
+    
+    sheet1_df <- sheet1_df %>%
+      select("Policy", "Year", "RES increase", "Target increase", "dispatch down decrease percentage")
+    
+    sheet2_df <- sheet2_df %>%
+      select("Policy", "Year", "RES increase", "Target increase", "dispatch down decrease percentage")
+    
+    
+    # --- RENDER GT TABLES ---
+    
+    output$sheet1_tbl <- render_gt({
+      sheet1_df %>%
+        mutate(`RES increase` = `RES increase` / 1000) %>%   # convert MWh → GWh
+        gt() %>%
+        fmt_number(
+          columns = "RES increase",
+          decimals = 1,
+          use_seps = TRUE,
+          pattern = "{x} GWh"   # label in the table
         ) %>%
-        
-        mutate(
-          `Planned SNSP` = case_when(
-            year >= 2025 & year <= 2027 ~ 0.80,
-            year >= 2028 & year <= 2029 ~ 0.85,
-            year == 2030               ~ 0.90,
-            TRUE                       ~ NA_real_
-          )
+        fmt_percent(columns = "Target increase", decimals = 1) %>%
+        fmt_percent(columns = "dispatch down decrease percentage", decimals = 1) %>%
+        tab_options(table.width = pct(100), data_row.padding = px(6)) %>%
+        tab_style(
+          style = cell_fill(color = "#f7f7f7"),
+          locations = cells_body()
+        )
+    })
+    
+    
+    output$sheet2_tbl <- render_gt({
+      sheet2_df %>%
+        mutate(`RES increase` = `RES increase` / 1000) %>%   # convert MWh → GWh
+        gt() %>%
+        fmt_number(
+          columns = "RES increase",
+          decimals = 1,
+          use_seps = TRUE,
+          pattern = "{x} GWh"   # label in the table
         ) %>%
-        mutate(
-          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
-          
-          # Curtailment = if_else(
-          #   .dd_total > 0,
-          #   (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
-          #   NA_real_
-          # ),
-          # Constraint = if_else(
-          #   .dd_total > 0,
-          #   (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
-          #   NA_real_
-          # ),
-          
-          `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", ""))%>%
-        mutate(
-          possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
-          `Dispatch Down` = if_else(
-            `Curtailment SNSP` == "Curtailment SNSP",
-            `Generated RES` - possible_res,
-            `Dispatch Down`
-          ),
-          `Generated RES` = if_else(
-            `Curtailment SNSP` == "Curtailment SNSP",
-            possible_res,
-            `Generated RES`
-          ),
-          Curtailment = 0.17 * `Dispatch Down`,
-          Constraint = 0.83 * `Dispatch Down`,
-          
-        ) %>%
-          
-        mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
-      
-      yearly_df
-    }, digits = 3, rownames = FALSE)
+        fmt_percent(columns = "Target increase", decimals = 1) %>%
+        fmt_percent(columns = "dispatch down decrease percentage", decimals = 1) %>%
+        tab_options(table.width = pct(100), data_row.padding = px(6)) %>%
+        tab_style(
+          style = cell_fill(color = "#f7f7f7"),
+          locations = cells_body()
+        )
+    })
+    
    
     
     

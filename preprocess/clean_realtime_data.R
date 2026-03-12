@@ -4,13 +4,13 @@ library(dplyr)
 library(lubridate)
 library(ggplot2)
 
-df2014_2015 <- read_excel("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/System-Data-Qtr-Hourly-2014-2015.xlsx")
-df2016_2017 <- read_excel("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/System-Data-Qtr-Hourly-2016-2017.xlsx")
-df2018_2019 <- read_excel("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/System-Data-Qtr-Hourly-2018-2019.xlsx")
-df2020_2021 <- read_excel("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/System-Data-Qtr-Hourly-2020-2021.xlsx")
-df2022_2023 <- read_excel("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/System-Data-Qtr-Hourly-2022-2023_0.xlsx")
-df2024 <- read_excel("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/System_Data_Qtr_Hourly_2024.xlsx")
-df2025 <- read_excel("C:/Users/YA775WS/OneDrive - EY/Desktop/SIB/whole_picture_2/data/System-Data-Qtr-Hourly-2025-v10.xlsx")
+df2014_2015 <- read_excel("./data/System-Data-Qtr-Hourly-2014-2015.xlsx")
+df2016_2017 <- read_excel("./data/System-Data-Qtr-Hourly-2016-2017.xlsx")
+df2018_2019 <- read_excel("./data/System-Data-Qtr-Hourly-2018-2019.xlsx")
+df2020_2021 <- read_excel("./data/System-Data-Qtr-Hourly-2020-2021.xlsx")
+df2022_2023 <- read_excel("./data/System-Data-Qtr-Hourly-2022-2023_0.xlsx")
+df2024 <- read_excel("./data/System_Data_Qtr_Hourly_2024.xlsx")
+df2025 <- read_excel("./data/System-Data-Qtr-Hourly-2025-v10.xlsx")
 
 
 
