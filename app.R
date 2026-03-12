@@ -34,6 +34,7 @@ getSliderValue <- function(inputValue, defaultValue) {
 
 source('./components/circular_value.R')
 source('./components/sticky_side_bar.R')
+source('./components/colour_scale_bar.R')
 
 mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
                               to = as.Date(end_date),
