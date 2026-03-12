@@ -515,10 +515,13 @@ br(),br(),
         ),
         
         br(), br(),
-        h5("Selected Forecast Combined Series (MWh)"),
+        # h5("Selected Forecast Combined Series (MWh)"),
         
+        h5(class = 'lead', 'MWhr'),
         br(),br(),
-        DTOutput(ns("last_year_sums_table_dt")),
+        div(class = "bg-light",
+        uiOutput(ns("last_year_sums_table_dt")),
+        br(),br()),
         br(),br(),
         # DTOutput(ns("combined_forecast_table_ci_dt")),
           div(class='d-flex ',
@@ -2347,7 +2350,7 @@ generation_server <- function(id, state) {
     }, digits = 3, rownames = FALSE)
     
     
-    output$last_year_sums_table_dt <- renderDT({
+    output$last_year_sums_table_dt <- renderUI({
       print('combined_forecast_ci()')
       print(combined_forecast_ci())
       print('----------------------')
@@ -2472,14 +2475,125 @@ generation_server <- function(id, state) {
                                                       class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
                                                       h5(class = 'fw-bold','MWh/year',f(`Dispatch Down`)))
                                                   
-        ))) %>%
-        select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
-        DT::datatable(height = '100vh',
-                      escape = F, 
-                      
-                      rownames=F,
-                      selection='none',
-                      options = list(dom = '',ordering = FALSE,pageLength = 10, scrollX = TRUE))})
+        ))) #%>%
+        # select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down` ) %>%  #View()
+        # DT::datatable(height = '100vh',
+        #               escape = F, 
+        #               
+        #               rownames=F,
+        #               selection='none',
+        #               options = list(dom = '',ordering = FALSE,pageLength = 10, scrollX = TRUE))
+      
+      
+      # Create grid layout with KPI cards
+      div(class = "container-fluid",
+          div(class = "row g-3",
+              # Target KPI on the left
+              div(class = "col-md-3",
+                  div(class = "card border-0 h-100",
+                      div(class = "card-body text-center",
+                          h6(class = "card-title text-muted", "Target"),
+                          div(style = 'margin: auto;width:80%;', big_circular_value(f(yearly_df$Target*100)))
+                      ),
+                      div(class='card-bottom', colour_scale_bar())
+                  )
+              ),
+              # 3x3 Grid on the right
+              div(class = "col-md-9",
+                  div(class = "row g-3",
+                      # Year KPI
+                      div(class = "col-md-4",
+                          div(class = "card border-0 h-100",
+                              div(class = "card-body text-center",
+                                  h6(class = "card-title text-muted", "Year"),
+                                  h1(yearly_df$year)
+                              )
+                          )
+                      ),
+                      # Flow KPI
+                      div(class = "col-md-4",
+                          div(class = "card border-0 h-100",
+                              div(class = "card-body",
+                                  h6(class = "card-title text-muted", "Flow"),
+                                  div(style = 'min-width:100px;',class= 'm-1 p-1',
+                                      div(div(class='lead',icon('arrow-left'),
+                                              f(yearly_df$Imports)),
+                                          p(class='text-muted text-bg-info p-1 m-1 rounded-2','Imports')),
+                                      div(class = 'float-right',
+                                          span(class='fw-bold',f(yearly_df$Exports),icon('arrow-right')),
+                                          p(class='text-bg-danger p-1 m-1 rounded-2','Exports')
+                                      )
+                                  )
+                              )
+                          )
+                      ),
+                      # Renewables KPI
+                      div(class = "col-md-4",
+                          div(class = "card border-0 h-100",
+                              div(class = "card-body",
+                                  h6(class = "card-title text-muted", "Renewables"),
+                                  div(
+                                    h4(class='text-bg-success p-1 m-1 rounded-2',icon(class= 'text-white','leaf'),f(yearly_df$`Generated RES`),'MW'),
+                                    br(),div(class = 'text-center lead',
+                                             div(f(yearly_df$`Generated Solar`),'/',f(yearly_df$`Available Solar`),'MW', icon(class='text-yellow','sun')),
+                                             div(f(yearly_df$`Generated Wind`),'/',f(yearly_df$`Available Wind`),'MW', icon(class='text-blue','fan'))
+                                    ))
+                              )
+                          )
+                      ),
+                      # SNSP KPI
+                      div(class = "col-md-4",
+                          div(class = "card border-0 h-100",
+                              div(class = "card-body",
+                                  h6(class = "card-title text-muted", "SNSP"),
+                                  div(class= 'm-1 p-1',
+                                      tags$ul(class = 'lead',
+                                              tags$li(class='text-muted','Actual / Planned SNSP'),
+                                              tags$li(paste(format(yearly_df$SNSP*100,digits=2) ,'% /', format(yearly_df$`Planned SNSP`*100,digits=2) ),'%'),
+                                              tags$li(class='text-danger',paste('\u394',format(yearly_df$`Planned SNSP`*100-yearly_df$SNSP*100,digits=2), '%' ))
+                                      ))
+                              )
+                          )
+                      ),
+                      # Demand KPI
+                      div(class = "col-md-4",
+                          div(class = "card border-0 h-100",
+                              div(class = "card-body",
+                                  h6(class = "card-title text-muted", "Demand"),
+                                  div(class= 'm-1 p-1', 
+                                      icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
+                                      icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
+                                      p(class='text-bg-dark fs-3 p-1 rounded-2 m-1' ,' MW ' ,f(yearly_df$Demand), 
+                                        # icon(class= 'text-centre','industry'),
+                                        # icon(class= '','house')
+                                      )
+                                  )
+                              )
+                          )
+                      ),
+                      # Dispatch Down KPI
+                      div(class = "col-md-4",
+                          div(class = "card border-0 h-100",
+                              div(class = "card-body",
+                                  h6(class = "card-title text-muted", "Dispatch Down"),
+                                  div(class= 'm-1 p-1',
+                                      tags$ul(class = 'lead',
+                                              tags$li(paste('Constraint:',format(yearly_df$Constraint,digits=2) )),
+                                              tags$li(paste('Curtailment:',format(yearly_df$Curtailment,digits=2) ))),
+                                      
+                                      div(style = 'border-style: double', 
+                                          class=' rounded-3 border-4 text-white bg-dark text-center','Dispatch Down',
+                                          h5(class = 'fw-bold','MW',f(as.numeric(yearly_df$.dd_total))))
+                                  )
+                              )
+                          )
+                      )
+                  )
+              )
+          )
+      )
+      
+      })
     
     
     

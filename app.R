@@ -245,7 +245,7 @@ ui <- navbarPage(
                                   label = tagList(icon("play"), " Run Simulation"),
                                   class = "btn btn-primary",
                                   style = "white-space: nowrap;"),
-                     actionButton(inputId = 'submit', 
+                     actionButton(inputId = 'take_state', 
                                   label = tagList(icon("arrow-up-right-from-square"), " Take state"),
                                   class = "btn btn-primary",
                                   style = "white-space: nowrap;"),
@@ -1279,7 +1279,6 @@ server <- function(input, output, session) {
     #                              to = as.Date('2031-01-01'),
     #                              by =1 ),'quarter'))
     
-    
     mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
                                   to = as.Date(end_date),
                                   by = 1 ), 'month')
@@ -1288,8 +1287,6 @@ server <- function(input, output, session) {
     # wks = unique(floor_date(seq( from = as.Date('2025-01-01'), 
     #                        to = as.Date('2031-01-01'),
     #                        by =1 ),'week'))
-    
-    
     
     forward_projects_outcome_first(
       left_join(
@@ -1301,11 +1298,9 @@ server <- function(input, output, session) {
       replace_na(replace = list(MW = 0, no_proj = 0)) |> 
       arrange(finished)
     
-
     )
     
     session$sendCustomMessage("toggleLoadingBtn", "hide")
-    
     
   })
   
@@ -1337,7 +1332,6 @@ server <- function(input, output, session) {
         'Date' = `Planning Application Submitted`,
         'tech',
         broad_status)
-    
     
     splitting_criteria <- current_projects$broad_status
     
