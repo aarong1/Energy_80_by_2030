@@ -2149,7 +2149,7 @@ generation_server <- function(id, state) {
         e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
         e_x_axis(label = 'Time', type='time') %>%
         e_theme('walden') %>% 
-        e_title('Dispatch Down', 'Availability - Generation')
+        e_title('Percentage of Available RES Generated')
         
     })
     

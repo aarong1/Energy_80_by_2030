@@ -1,5 +1,3 @@
-# Combined Energy Planning Dashboard
-
 print('e')
 library(shiny)
 library(bslib)
@@ -10,6 +8,8 @@ library(promises)
 library(memoise)
 library(digest)
 library(echarts4r)
+
+
 
 # Load renewable simulation sources
 options(shiny.devmode = TRUE)
@@ -1798,6 +1798,10 @@ observe({
        
   
 }
+
+
+
+
 
 
 shinyApp(ui, server)
