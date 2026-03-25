@@ -219,28 +219,28 @@ br(),br(),
                     )
                   )
                 ),
-                div(
-                  class = "input-group mb-2",
-                  tags$label(
-                    class = "form-control",
-                    `for` = ns("reduce_moyle"),
-                    "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector"
-                  ),
-                  tags$label(
-                    class = "input-group-text",
-                    `for` = ns("reduce_moyle"),
-                    h5(class = 'h4 fw-bold',2026)
-                  ),
-                  div(
-                    class = "input-group-text",
-                    tags$input(
-                      type = "checkbox",
-                      class = "form-check-input mt-0",
-                      id = ns("reduce_moyle"),
-                      autocomplete = "off"
-                    )
-                  )
-                )
+                # div(
+                #   class = "input-group mb-2",
+                #   tags$label(
+                #     class = "form-control",
+                #     `for` = ns("reduce_moyle"),
+                #     "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector"
+                #   ),
+                #   tags$label(
+                #     class = "input-group-text",
+                #     `for` = ns("reduce_moyle"),
+                #     h5(class = 'h4 fw-bold',2026)
+                #   ),
+                #   div(
+                #     class = "input-group-text",
+                #     tags$input(
+                #       type = "checkbox",
+                #       class = "form-check-input mt-0",
+                #       id = ns("reduce_moyle"),
+                #       autocomplete = "off"
+                #     )
+                #   )
+                # )
               ),
               
               tags$script(HTML(sprintf("
@@ -1796,6 +1796,24 @@ generation_server <- function(id, state) {
           df_all <- df_all %>%
             mutate(sum_avai_wind = dplyr::coalesce(lo95_avai_wind, sum_avai_wind))
         }
+        
+        {
+          fc  <- results_last3$sum_import$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_sum_import <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_import = dplyr::coalesce(hi95_sum_import, sum_import))
+        }
+        
+        {
+          fc  <- results_last3$sum_export$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_sum_export <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_export = dplyr::coalesce(lo95_sum_export, sum_export))
+        }
       }
       
       if (scenario == "best") {
@@ -1842,6 +1860,24 @@ generation_server <- function(id, state) {
           hi95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
             mutate(sum_avai_wind = dplyr::coalesce(hi95_avai_wind, sum_avai_wind))
+        }
+        
+        {
+          fc  <- results_last3$sum_import$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_sum_import <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_import = dplyr::coalesce(lo95_sum_import, sum_import))
+        }
+        
+        {
+          fc  <- results_last3$sum_export$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_sum_export <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_export = dplyr::coalesce(hi95_sum_export, sum_export))
         }
       }
       
@@ -2629,10 +2665,10 @@ generation_server <- function(id, state) {
                 h5(class = 'fw-bold','MWh/year',f(`Dispatch Down`)))
             
           ))) %>%
-         # mutate(`Cumulative Demand (MWh)`) %>%
-          # select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`, `Cumulative Demand (MWh)`,
-          #        `Cumulative RES (MWh)`   ,`Cumulative Dispatch Down (MWh)`) %>% 
-          select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`) %>% 
+         mutate(`Cumulative Demand (MWh)`) %>%
+         # select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`, `Cumulative Demand (MWh)`,
+         #        `Cumulative RES (MWh)`   ,`Cumulative Dispatch Down (MWh)`) %>%
+          select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`) %>%
           DT::datatable(height = '100vh',
                         escape = F, 
                         
