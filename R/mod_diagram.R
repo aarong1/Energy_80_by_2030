@@ -19,7 +19,7 @@ diagram_server <- function(id, state) {
     
     # Inject the SVG inline so the JS can see the <a> elements
     output$diagram <- renderUI({
-      svg_txt <- paste(readLines("www/test1.drawio.svg", warn = FALSE), collapse = "\n")
+      svg_txt <- paste(readLines("www/big_picture.drawio.svg", warn = FALSE), collapse = "\n")
       HTML(svg_txt)
     })
     
