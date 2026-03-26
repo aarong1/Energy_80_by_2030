@@ -8,8 +8,39 @@ library(memoise)
 library(digest)
 library(echarts4r)
 
+bar_chart <- function(label, width = "100%", height = "1rem", fill = "#00bfc4", background = 'lightgrey') {
+  bar <- div(style = list(background = fill, width = width, height = height))
+  chart <- div(style = list(flexGrow = 4, marginLeft = "0.5rem", background = background), bar)
+  div(style = list(display = "flex", alignItems = "center"), round(label/100)/10, chart)
+}
+
+
+
+BuYlRd <- function(x) rgb(colorRamp(c('#305CDE',"#7fb7d7",'lightblue',"#F2F0EF", "#ffffbf", "#fc8d59",'darkorange'))(x), maxColorValue = 255)
+# GnYlRd <- function(x) rgb(colorRamp(c("#7fb7d7", "#ffffbf", "#fc8d59"))(x), maxColorValue = 255)
+
+
+Yellows <- function(x) rgb(colorRamp(c("#F2F0EF", "#ffffbf", "#E4D00A"))(x), maxColorValue = 255)
+yellow_palette <- colorRampPalette(c("#FFF9C4","#E4D00A"))(10) # "#F57F17"
+Yellows <- function(x) rgb(colorRamp(yellow_palette)(x), maxColorValue = 255)
+
+
+Blues <- function(x) rgb(colorRamp(c("#F2F0EF",  "#7fb7d7",'#305CDE'))(x), maxColorValue = 255)
+
+blue_palette <- colorRampPalette(c("#E3F2FD",'#4e91fd'))(10) # "#1565C0"
+
+Blues <- function(x) rgb(colorRamp(blue_palette)(x), maxColorValue = 255)
+
+Yellows_alpha <- function(x) rgb(colorRamp(c( "#F2F0EF55", "#ffffbf55", "#E4D00A55"))(x), maxColorValue = 255)
+
+Blues_alpha <- function(x) rgb(colorRamp(c("#F2F0EF55", "#7fb7d755",'#305CDE55'))(x), maxColorValue = 255)
+
+
+
 #ui
 f <- function(p){format(big.mark=',',round(p))}
+
+
 
 target_date = '2030-01-01'
 end_date = '2032-01-01'
@@ -2907,7 +2938,7 @@ generation_server <- function(id, state) {
           `Dispatch Down Wind` = colDef(name = 'Wind',html = TRUE,
                                       style = function(value) {
                                         if (!is.numeric(value)) return()
-                                        normalized <- (as.numeric(value) - min(x$`Dispatch Down Wind`)) / (max(x$`Dispatch Down Wind`) - min(x$`Dispatch Down Wind`))
+                                        normalized <- (as.numeric(value) - min(.$`Dispatch Down Wind`)) / (max(.$`Dispatch Down Wind`) - min(.$`Dispatch Down Wind`))
                                         color <- Blues_alpha(normalized)
                                         list(background = color)
                                       },
@@ -2918,20 +2949,20 @@ generation_server <- function(id, state) {
           # Generated.Wind = colDef(name = ''),
           
           Demand = colDef(minWidth = 100, align = "left", cell = function(value) {
-            width <- paste0(value / max(as.numeric(x$Demand)) * 100, "%")
+            width <- paste0(value / max(as.numeric(.$Demand)) * 100, "%")
             
             bar_chart(value,fill = "black", width = width)
           }),
           Imports = colDef(minWidth = 100, 
                            cell = function(value) {
-                             width <- paste0(value / max(as.numeric(x$Imports)) * 100, "%")
+                             width <- paste0(value / max(as.numeric(.$Imports)) * 100, "%")
                              
                              bar_chart(value,fill = "lightgreen", width = width)
                            }),
           Exports = colDef(minWidth = 100, 
                            style =list(paddingRight='10px',borderRight= '1px solid #555'),
                            cell = function(value) {
-                             width <- paste0(value / max(as.numeric(x$Exports)) * 100, "%")
+                             width <- paste0(value / max(as.numeric(.$Exports)) * 100, "%")
                              
                              bar_chart(value,fill = "lightblue", width = width)
                            }),
