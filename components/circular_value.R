@@ -208,8 +208,83 @@ font-weight:bold;
     )
   )
 }
-# 
-# browsable(page_fluid(
-#   circular_value(85)
-# ))
+
+
+small_circular_value <- function(value=50,id =runif(1) ){
+  
+  labels = c('below cost effective', 
+             'lower threshold cost effective',
+             'upper threshold cost effective',
+             'cost effective'
+  )
+  
+  below_values =c(0,30, 40, 50, 60,  70, 80)
+  
+  colours = rev(c('mediumseagreen','lightgreen','yellow','orange', '#860d0d','#000'))
+  colours = rev(c('mediumseagreen','lightgreen','lightgoldenrodyellow','yellow','moccasin','orange','lightsalmon','lightcoral', '#ff4741','#000'))
+  
+  
+  colours_index <- max(which(!value<=below_values))
+  print(value)
+  print(colours_index)
+  print(colours)
+  print(which(value<below_values))
+  print(colours[colours_index])
+  div(
+    # border:solid ',colours[colours_index],' 15px ; /* lightgreen */
+    #   border-radius:50%;
+    # transform: scale(1);
+    # padding-top:1%;
+    # width:100%;
+    # height:100%;
+    # transition: transform 1s ease-in-out;
+    
+    HTML(paste0('<head>
+    
+    <style>
+   .inner_small{  
+     border-radius:50%;
+
+  padding-top:1%;
+    padding-right:10%;
+
+  width:20px;
+  height:20px;
+  transform: scale(1);
+  transition: transform 1s ease-in-out;
+   }
+  
+  .inner_small:hover {
+    transform: scale(1.2);
+          transition: transform 0.5s ease-in-out;
+          
+  .content:hover {
+    transform: none !important;
+    
+  </style>
+       </head>')),
+   
+          div(id =as.character(id),class ='inner_small',
+              
+              style = paste0('
+  background: ',colours[colours_index],'/* solid green 20px ; lightgreen  */ 
+
+    '),
+           
+              
+              # div(style='text-align:center;',
+              # )
+          
+    )
+  )
+}
+
+
+
+browsable(page_fluid(
+  small_circular_value(40)
+))
+
+
+
 

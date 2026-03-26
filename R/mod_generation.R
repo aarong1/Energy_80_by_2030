@@ -19,9 +19,6 @@ mons = unique(floor_date(seq( from = as.Date('2025-01-01'),
                               by = 1 ), 'month')
 )
 
-
-
-
 generation_ui <- function(id) {
   ns <<- NS(id)
   
@@ -366,6 +363,8 @@ br(),br(),
                  ns("ldes"), ns("sn_interconnector"))))
             )
           ),
+          
+
         #   div(  
         #     card(
         #     class = "shadow-sm border-0 rounded-3",
@@ -480,6 +479,7 @@ br(),br(),
                 )
               )
             ),
+
             
             # JS: send vector of checked boxes to Shiny
             tags$script(HTML(sprintf("
@@ -514,12 +514,14 @@ br(),br(),
         )
         ),
         
+
+        
         br(), br(),
         # h5("Selected Forecast Combined Series (MWh)"),
         
         h5(class = 'lead', 'MWhr'),
         br(),br(),
-        div(class = "bg-light",
+        div(class = "bg-light rounded-3 shadow-sm",
         uiOutput(ns("last_year_sums_table_dt")),
         br(),br()),
         br(),br(),
@@ -556,7 +558,9 @@ br(),br(),
         div(
         class = "shadow-sm border-0 rounded-3 p-5 m-5",
         div(#class='',
-          DTOutput(ns("yearly_sums_table_dt"))
+          # DTOutput(ns("yearly_sums_table_dt")),
+          reactableOutput(ns("yearly_sums_table_dt_reactable"))
+          
         )
       ),
       
@@ -583,15 +587,6 @@ br(),br(),
           )
         )
         ),
-      
-  
-      
-      
-        
-
-        
-        
-        
     
         # card(
         #   class = "shadow-sm border-0 rounded-3",
@@ -606,10 +601,7 @@ br(),br(),
         #                   class = "btn-primary mt-2")
         #   )
         # ),
-        
-    
       
-        
 #-------model-based predictions
         card(
           class = "shadow-sm border-0 rounded-3",
@@ -1729,7 +1721,7 @@ generation_server <- function(id, state) {
     })
     
     combined_forecast_ci <- reactive({
-      req(results_last3)
+      # req(results_last3)
       
       vars <- names(results_last3)
       choices <- setNames(
@@ -2141,16 +2133,17 @@ generation_server <- function(id, state) {
       #   e_scatter(y)
       dt %>%
         mutate(
-          perc_res = `Generated RES` / `Available RES`*100) %>%
+          perc_res = `Generated RES` / `Available RES`) %>%
         e_charts(date) %>%
         e_line(perc_res,  color='#FFDE21', name = 'Availability of Renewable', emphasis = list(focus= 'series')) %>%  # #FFDE21
         # e_line(perc_wind,  color='cornflowerblue',name = 'Availability of Wind', emphasis = list(focus= 'series')) %>%
-        e_format_y_axis(suffix='%') %>%
+        # e_format_y_axis(suffix='%') %>%
+        e_y_axis(formatter = e_axis_formatter(style = 'percent')) %>%
         e_mark_line(data = list(name= 'Theoretical Max',
                                 yAxis= 100),
                     lineStyle = list(type='solid', color='grey')) %>% 
-        e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
-        e_x_axis(label = 'Time', type='time') %>%
+        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        # e_x_axis(label = 'Time', type='time') %>%
         e_theme('walden') %>% 
         e_title('Dispatch Down', 'Availability - Generation')
         
@@ -2182,7 +2175,7 @@ generation_server <- function(id, state) {
       # e_line(Dispatch.Down.Wind,color='salmon', stack = 'h') %>%
       # e_bar(`Dispatch Down Solar`,color='firebrick', stack = 'f', name = 'Dispatch Down Solar',emphasis = list(focus= 'series')) %>%
       # e_line(Dispatch.Down.Solar,color='lightcoral', stack = 'h') %>%
-      e_x_axis(name = 'Time', type='time') %>%
+      # e_x_axis(name = 'Time', type='time') %>%
       # e_loess(formula = Dispatch.Down.Solar~date,color='black') %>%
         e_tooltip(formatter = e_tooltip_item_formatter("decimal")) %>% 
         e_theme('walden') %>% 
@@ -2203,7 +2196,9 @@ generation_server <- function(id, state) {
         # e_line(Constraint, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>%
         # e_line(`Available RES`, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
         # e_line(`Generated RES`, itemStyle = list(opacity=0),emphasis = list(focus='series')) %>% 
-        e_x_axis(type = 'time' ,max = "2030-12-01") %>%
+        
+        # e_x_axis(type = 'time' ,max = "2030-12-01") %>%
+        e_x_axis(max = "2030-12-01") %>%
    
         e_color(c('black','red', 'lightcoral',  'royalblue', 'steelblue', '#b3d89c','#9dc3c2')) %>%
         e_annotations(default_color = 'grey',
@@ -2223,7 +2218,10 @@ generation_server <- function(id, state) {
         e_tooltip() %>% 
         e_theme('walden') %>% 
         e_y_axis( formatter = e_axis_formatter(style = 'percent')) %>% 
-        e_title('RES Target with SNSP, DD, Curatilment and Constraint Trajectory', 'Dashed line = Planned SNSP')
+        #e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
+        
+        e_title('RES Target with SNSP, DD, Curtailment and Constraint Trajectory', 'Dashed line = Planned SNSP')
     })
     
     
@@ -2533,10 +2531,10 @@ generation_server <- function(id, state) {
                               div(class = "card-body",
                                   h6(class = "card-title text-muted", "Renewables"),
                                   div(
-                                    h4(class='text-bg-success p-1 m-1 rounded-2',icon(class= 'text-white','leaf'),f(yearly_df$`Generated RES`),'MW'),
+                                    h4(class='text-bg-success p-1 m-1 rounded-2',icon(class= 'text-white','leaf'),f(yearly_df$`Generated RES`),'MWh/year'),
                                     br(),div(class = 'text-center lead',
-                                             div(f(yearly_df$`Generated Solar`),'/',f(yearly_df$`Available Solar`),'MW', icon(class='text-yellow','sun')),
-                                             div(f(yearly_df$`Generated Wind`),'/',f(yearly_df$`Available Wind`),'MW', icon(class='text-blue','fan'))
+                                             div(f(yearly_df$`Generated Solar`),'/',f(yearly_df$`Available Solar`),'MWh/year', icon(class='text-yellow','sun')),
+                                             div(f(yearly_df$`Generated Wind`),'/',f(yearly_df$`Available Wind`),'MWh/year', icon(class='text-blue','fan'))
                                     ))
                               )
                           )
@@ -2547,10 +2545,13 @@ generation_server <- function(id, state) {
                               div(class = "card-body",
                                   h6(class = "card-title text-muted", "SNSP"),
                                   div(class= 'm-1 p-1',
-                                      tags$ul(class = 'lead',
-                                              tags$li(class='text-muted','Actual / Planned SNSP'),
-                                              tags$li(paste(format(yearly_df$SNSP*100,digits=2) ,'% /', format(yearly_df$`Planned SNSP`*100,digits=2) ),'%'),
-                                              tags$li(class='text-danger',paste('\u394',format(yearly_df$`Planned SNSP`*100-yearly_df$SNSP*100,digits=2), '%' ))
+                                      tags$ul(
+                                              tags$div(class='text-muted','Actual / Planned SNSP'),
+                                              tags$div(class = 'fw-bold', paste(format(yearly_df$SNSP*100,digits=2) ,'% /', format(yearly_df$`Planned SNSP`*100,digits=2) ),'%'),
+                                              
+                                              tags$div(class = 'fw-regular fs-2', class='text-danger',
+                                                       icon('arrows-left-right-to-line'),
+                                                       paste(format(yearly_df$`Planned SNSP`*100-yearly_df$SNSP*100,digits=2), '%' )) #'\u394',
                                       ))
                               )
                           )
@@ -2563,7 +2564,7 @@ generation_server <- function(id, state) {
                                   div(class= 'm-1 p-1', 
                                       icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
                                       icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
-                                      p(class='text-bg-dark fs-3 p-1 rounded-2 m-1' ,' MW ' ,f(yearly_df$Demand), 
+                                      p(class='text-bg-dark fs-3 p-1 rounded-2 m-1' ,' MWh/year ' ,f(yearly_df$Demand), 
                                         # icon(class= 'text-centre','industry'),
                                         # icon(class= '','house')
                                       )
@@ -2578,12 +2579,12 @@ generation_server <- function(id, state) {
                                   h6(class = "card-title text-muted", "Dispatch Down"),
                                   div(class= 'm-1 p-1',
                                       tags$ul(class = 'lead',
-                                              tags$li(paste('Constraint:',format(yearly_df$Constraint,digits=2) )),
-                                              tags$li(paste('Curtailment:',format(yearly_df$Curtailment,digits=2) ))),
+                                              tags$li(paste('Constraint:',f(yearly_df$Constraint) )),
+                                              tags$li(paste('Curtailment:',f(yearly_df$Curtailment) ))),
                                       
                                       div(style = 'border-style: double', 
-                                          class=' rounded-3 border-4 text-white bg-dark text-center','Dispatch Down',
-                                          h5(class = 'fw-bold','MW',f(as.numeric(yearly_df$.dd_total))))
+                                          class=' rounded-3 border-4 text-white bg-black text-center','Dispatch Down',
+                                          h5(class = 'fw-bold','MWh/year', f(as.numeric(yearly_df$Constraint) + as.numeric(yearly_df$Curtailment)))))
                                   )
                               )
                           )
@@ -2591,9 +2592,11 @@ generation_server <- function(id, state) {
                   )
               )
           )
-      )
       
       })
+    
+    
+    
     
     
     
@@ -2619,16 +2622,83 @@ generation_server <- function(id, state) {
       round(last_year_target() * 100)  
     })
     
+    output$last_year_snsp <- renderText({
+      paste(round(last_year_snsp() * 100) ,'%') 
+    })
+    
+    output$last_year_net_energy_flow <- renderText({
+      round(
+        last_year_net_energy_flow() )  
+    })
+    
+    output$last_year_change_in_dispatch_down <- renderText({
+      round(
+        last_year_change_in_dispatch_down() )  
+    })
+
+    
+    last_year_snsp <- reactive({
+      df <- combined_forecast_ci()
+      df$date <- as.Date(df$date)
+      df$year <- format(df$date, "%Y")
+      
+      num_cols <- sapply(df, is.numeric)
+      
+      yearly_df <- df %>%
+        filter(year == 2030) %>%
+        group_by(year) %>%
+        summarise(across(which(num_cols), sum, na.rm = TRUE))
+      
+      target <- (yearly_df$`Generated RES` + yearly_df$`Imports`) /(yearly_df$`Demand` + yearly_df$`Exports`)
+      target <- min(target, 1)
+      
+      return(target)  
+    })
+    
+    last_year_net_energy_flow <- reactive({
+      df <- combined_forecast_ci()
+      df$date <- as.Date(df$date)
+      df$year <- format(df$date, "%Y")
+      
+      num_cols <- sapply(df, is.numeric)
+      
+      yearly_df <- df %>%
+        filter(year == 2030) %>%
+        group_by(year) %>%
+        summarise(across(which(num_cols), sum, na.rm = TRUE))
+      
+      target <- yearly_df$Exports - yearly_df$Imports 
+      target <- target/10e6
+
+      
+      return(target)  
+    })
+    
+    last_year_change_in_dispatch_down <- reactive({
+      df <- combined_forecast_ci()
+      df$date <- as.Date(df$date)
+      df$year <- format(df$date, "%Y")
+      
+      num_cols <- sapply(df, is.numeric)
+      
+      yearly_df <- df %>%
+        filter(year %in% c(min(year), 2030)) %>%
+        group_by(year) %>%
+        summarise(across(which(num_cols), sum, na.rm = TRUE))
+      
+      target <- first(yearly_df$`Dispatch Down`) - last(yearly_df$`Dispatch Down`)
+      target <- target/10e6
+      
+      return(target)  
+    })
     
     
     
-    output$yearly_sums_table_dt <- renderDT({
-      print('combined_forecast_ci()')
-      print(combined_forecast_ci())
-      print('----------------------')
+    
+    output$yearly_sums_table_dt_reactable <- renderReactable({
       
       df <- combined_forecast_ci()
-      
+    
       df$date <- as.Date(df$date)
       
       df$year <- format(df$date, "%Y")
@@ -2657,7 +2727,7 @@ generation_server <- function(id, state) {
         ) %>%
         mutate(
           # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
-          #      
+          #
           #      Curtailment = if_else(
           #        .dd_total > 0,
           #        (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
@@ -2668,8 +2738,8 @@ generation_server <- function(id, state) {
           #        (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
           #        NA_real_
           #      ),
-               
-        `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")) %>%
+          
+          `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")) %>%
         mutate(
           possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
           `Dispatch Down` = if_else(
@@ -2695,12 +2765,235 @@ generation_server <- function(id, state) {
       # page_fluid(
       #   icon('arrow-right',class= 'visually-hidden'),
       
-      # yearly_df <- yearly_df %>% 
+      # yearly_df <- yearly_df %>%
+      #   mutate(across(-c('Curtailment SNSP','year'),
+      #                 ~as.numeric(round(.x))))
+      
+      yearly_df %>% 
+        rowwise() %>% 
+        mutate(q =  as.character(div(style = 'width:380px',                        
+                                     class = " d-flex flex-row align-items-center gap-2",
+                                     
+                                     small_circular_value(as.numeric(Target*100),
+                                     ), 
+                                     # p(class = ' fw-semibold fs-1',as.character(year)),
+                                     div(class = "ps-3 ms-3 w-100, d-flex flex-column  gap-2",
+                                         div(class = "w-100, d-flex flex-row align-items-end justify-content-start gap-2",
+                                             h3(class = ' fw-semibold',as.character(`year`))
+                                             # p(class = 'pb-0', as.character(round(100*Target)),'%'),
+                                         ),
+                                         
+                                         div(  
+                                           class = "w-100, d-flex flex-row align-items-start gap-2",
+                                           p(class = '',  p(class = 'fw-bold', 'SNSP') ,as.character(round(100*SNSP)),'%'),'•',
+                                           p( class="",   p(class = 'fw-bold', 'Demand'), as.character((round(Demand/100)/10)),'MWhr'),'•',
+                                           p(class = 'pb-0', 
+                                             icon(class = 'fw-bold','bullseye'),
+                                             as.character(round(100*Target)),'%'),
+                                           #badge rounded-pill text-bg-secondary
+                                           # p(class = 'text-muted fs-5',as.character((round(21324/100)/10)))
+                                         )) 
+        ))) %>% 
+        
+        mutate(#`Dispatch Down Wind` = round(`Dispatch Down Wind`/100)/10,
+               #`Dispatch Down Solar` = round(`Dispatch Down Solar`/100)/10,
+               `Generated Wind` = round(`Generated Wind`/10)/100,
+               `Generated Solar` = round(`Generated Solar`/10)/100
+        ) %>% 
+        
+        select(q, Demand, Imports, Exports, #`Dispatch Down Wind`, `Dispatch Down Solar`,
+               `Generated Wind`, `Generated Solar`) %>% 
+        reactable( 
+          defaultColDef = colDef(
+            minWidth = 80
+          ),
+          columnGroups = list(
+            colGroup(name = "Interconnection", columns = c('Imports','Exports')),
+            colGroup(name = "Generated", columns = c('Generated Solar', 'Generated Wind'))#,
+            #colGroup(name = "Dispatch Down", columns = c('Dispatch Down Wind', 'Dispatch Down Solar' ))
+          ),
+          columns = list(q = colDef(name = '', 
+                                    minWidth = 380,
+                                    html = TRUE,
+                                    style = list(paddingRight='10px',borderRight= '1px solid #555')
+          ),
+          
+          # `Dispatch Down Solar` = colDef(name = 'Solar', 
+          #                              html = TRUE, 
+          #                              style = function(value) {
+          #                                if (!is.numeric(value)) return()
+          #                                normalized <- (as.numeric(value) - min(x$`Dispatch Down Solar`)) / (max(x$`Dispatch Down Solar`) - min(x$`Dispatch Down Solar`))
+          #                                color <- Yellows_alpha(normalized)
+          #                                list(background = color,paddingRight='10px',borderRight= '4px solid black')
+          #                              },
+          #                              format = colFormat(digits = 1)#,
+          #                              # style = 'padding-right:10px;border-right: 4px solid #555;'
+          # ),
+          # `Dispatch Down Wind` = colDef(name = 'Wind',html = TRUE,
+          #                             style = function(value) {
+          #                               if (!is.numeric(value)) return()
+          #                               normalized <- (as.numeric(value) - min(x$`Dispatch Down Wind`)) / (max(x$`Dispatch Down Wind`) - min(x$`Dispatch Down Wind`))
+          #                               color <- Blues_alpha(normalized)
+          #                               list(background = color)
+          #                             },
+          #                             format = colFormat(digits = 1)),
+          
+          # Generated.Solar = colDef(name = 'Solar', html = F),
+          
+          # Generated.Wind = colDef(name = ''),
+          
+          Demand = colDef(minWidth = 100, align = "left", cell = function(value) {
+            width <- paste0(value / max(as.numeric(x$Demand)) * 100, "%")
+            print(width)
+            bar_chart(value,fill = "black", width = width)
+          }),
+          Imports = colDef(minWidth = 100, 
+                           cell = function(value) {
+                             width <- paste0(value / max(as.numeric(x$Imports)) * 100, "%")
+                             print(width)
+                             bar_chart(value,fill = "lightgreen", width = width)
+                           }),
+          Exports = colDef(minWidth = 100, 
+                           style =list(paddingRight='10px',borderRight= '1px solid #555'),
+                           cell = function(value) {
+                             width <- paste0(value / max(as.numeric(x$Exports)) * 100, "%")
+                             print(width)
+                             bar_chart(value,fill = "lightblue", width = width)
+                           }),
+          
+          # Imports = colDef(
+          #   style = function(value) {
+          #     if (!is.numeric(value)) return()
+          #     normalized <- (as.numeric(value) - min(x$Imports)) / (max(x$Imports) - min(x$Imports))
+          #     color <- BuYlRd(normalized)
+          #     list(background = color, padding ='10px', margin ='20px', borderRadius = '20px')
+          #   },
+          #   format = colFormat(digits = 1)
+          #   ),
+          # Exports = colDef(
+          #   style = function(value) {
+          #     if (!is.numeric(value)) return()
+          #     normalized <- (as.numeric(value) - min(x$Exports)) / (max(x$Exports) - min(x$Exports))
+          #     color <- BuYlRd(normalized)
+          #     list(background = color, padding ='10px', margin ='20px', borderRadius = '20px')
+          #   },
+          #   format = colFormat(digits = 1)
+          # ),
+          
+          `Generated Solar` = colDef(
+            name='Solar',
+            style = function(value) {
+              if (!is.numeric(value)) return()
+              normalized <- (as.numeric(value) - min(.$`Generated Solar`)) / (max(.$`Generated Solar`) - min(.$`Generated Solar`))
+              print('value')
+              print(value)
+              color <- Yellows(normalized)
+              list(background = color)
+            },
+            format = colFormat(digits = 1)
+          ),
+          
+          `Generated Wind` = colDef(
+            name='Wind',
+            style = function(value) {
+              if (!is.numeric(value)) return()
+              normalized <- (as.numeric(value) - min(.$`Generated Wind`)) / (max(.$`Generated Wind`) - min(.$`Generated Wind`))
+              color <- Blues(normalized)
+              print(value)
+              
+              list(background = color)
+            },
+            format = colFormat(digits = 1)
+            
+          )
+          )
+        ) #%>% page_fluid(style = 'font-size:80%;',., icon('bullseye')) %>% browsable()
+      
+    })
+
+  
+    output$yearly_sums_table_dt <- renderDT({
+      # print('combined_forecast_ci()')
+      # print(combined_forecast_ci())
+      print('----------------------')
+
+      df <- combined_forecast_ci()
+
+      df$date <- as.Date(df$date)
+
+      df$year <- format(df$date, "%Y")
+      df <- df %>% dplyr::filter(year >= 2026)
+
+      num_cols <- sapply(df, is.numeric)
+
+      yearly_df <- df %>%
+        group_by(year) %>%
+        summarise(across(which(num_cols), sum, na.rm = TRUE)) %>%
+
+        mutate(
+          Target = `Generated RES` / `Demand`,
+          Target = pmin(Target, 1),
+          SNSP   = (`Generated RES` + `Imports`) /
+            (`Demand` + `Exports`)
+        ) %>%
+
+        mutate(
+          `Planned SNSP` = case_when(
+            year >= 2025 & year <= 2027 ~ 0.80,
+            year >= 2028 & year <= 2029 ~ 0.85,
+            year == 2030               ~ 0.90,
+            TRUE                       ~ NA_real_
+          )
+        ) %>%
+        mutate(
+          # .dd_total = `Dispatch Down Wind` + `Dispatch Down Solar`,
+          #
+          #      Curtailment = if_else(
+          #        .dd_total > 0,
+          #        (0.1667 * `Dispatch Down Wind` + 0.1461 * `Dispatch Down Solar`) / .dd_total,
+          #        NA_real_
+          #      ),
+          #      Constraint = if_else(
+          #        .dd_total > 0,
+          #        (0.8318 * `Dispatch Down Wind` + 0.8542 * `Dispatch Down Solar`) / .dd_total,
+          #        NA_real_
+          #      ),
+
+        `Curtailment SNSP` = ifelse(SNSP > `Planned SNSP`, "Curtailment SNSP", "")) %>%
+        mutate(
+          possible_res = `Planned SNSP` * (Demand + Exports) - Imports,
+          `Dispatch Down` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            `Generated RES` - possible_res,
+            `Dispatch Down`
+          ),
+          `Generated RES` = if_else(
+            `Curtailment SNSP` == "Curtailment SNSP",
+            possible_res,
+            `Generated RES`
+          ),
+          Curtailment = 0.17 * `Dispatch Down`,
+          Constraint = 0.83 * `Dispatch Down`,
+
+        ) %>%
+        mutate(
+          `Cumulative Demand (MWh)` = cumsum(`Demand`),
+          `Cumulative RES (MWh)`    = cumsum(`Generated RES`),
+          `Cumulative Dispatch Down (MWh)` = cumsum(`Dispatch Down`)
+        ) %>%
+        mutate(SNSP = pmin(SNSP, `Planned SNSP`, na.rm = FALSE))
+      # page_fluid(
+      #   icon('arrow-right',class= 'visually-hidden'),
+
+      # yearly_df <- yearly_df %>%
       #   mutate(across(-c('Curtailment SNSP','year'),
       #                 ~as.numeric(round(.x))))
         
-      yearly_df %>% 
-          rowwise( ) %>% 
+      print(yearly_df)
+      
+      
+      yearly_df %>%
+          rowwise( ) %>%
           mutate(.before = 2,Flow=as.character(tagList(div(style = 'min-width:100px;',class= 'm-1 p-1',
             div(div(class='lead',icon('arrow-left'),
                     f(Imports)	),
@@ -2709,47 +3002,48 @@ generation_server <- function(id, state) {
                 span(class='text-muted',f(Exports)	,icon('arrow-right')),
                 p(class='text-bg-danger p-1 m-1 rounded-2','Exports')
             ),
-          )))) %>% 
+          )))) %>%
           mutate(.after = 2, Renewables=as.character(tagList(div(
             h4(class='text-bg-success p-1 m-1 rounded-2',icon('leaf'),f(`Generated RES`)),
             div(class = 'text-center',
                 div(f(`Generated Solar`),'/',f(`Available Solar`), icon(class='text-yellow','sun')),
                 div(f(`Generated Wind`),'/',f(`Available Wind`), icon(class='text-blue','fan'))
-            ))))) %>% 
+            ))))) %>%
           mutate(
-            .after = 3,Demand=as.character(tagList(div( class= 'm-1 p-1', 
+            .after = 3,Demand=as.character(tagList(div( class= 'm-1 p-1',
               icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),icon(class = 'fw-bold','bolt'),
               icon(class= 'float-end','industry'),icon(class= 'float-end','house'),
-              p(class='text-bg-dark p-1 rounded-2 m-1' ,' MWh/year ' ,f(Demand), 
+              p(class='text-bg-dark p-1 rounded-2 m-1' ,' MWh/year ' ,f(Demand),
               icon(class= 'text-centre','industry'),
               icon(class= '','house')
 )
-            )))) %>% 
-          mutate(.after = 4,year= as.character(h1(year))) %>% 
-          mutate(Target = as.character(div(style = 'width:105px;',circular_value(f(Target*100)) ) ))%>% 
-          # mutate(.after = 5,Target = as.character(h1(Target)) )%>% 
+            )))) %>%
+          mutate(.after = 4,year= as.character(h1(year))) %>%
+          mutate(Target = as.character(div(style = 'width:105px;',circular_value(f(Target*100)) ) ))%>%
+          # mutate(.after = 5,Target = as.character(h1(Target)) )%>%
           mutate(gap='') %>%
-          mutate(SNSP = as.character(div(class= 'm-1 p-1',tags$ul(tags$li(class='text-muted','Actual / Planned SNSP'),
-                                             tags$li(paste(format(SNSP,digits=2) ,'/', format(`Planned SNSP`,digits=2) )),
-                                             tags$li( class='text-danger',paste('\u394',format(`Planned SNSP`-SNSP,digits=2) ))
+          mutate(SNSP = as.character(div(class= 'm-1 p-1',tags$ul(
+            tags$div(class='text-muted','Actual / Planned SNSP'),
+            tags$div(paste(format(SNSP,digits=2) ,'/', format(`Planned SNSP`,digits=2) )),
+            tags$div( class='text-danger',icon('arrows-left-right-to-line'),paste(format(`Planned SNSP`-SNSP,digits=2) ))
           )))) %>%
           mutate(`Dispatch Down` = as.character(div(class= 'm-1 p-1',
             tags$ul(
               tags$li(paste('Constraint:',format(Constraint,digits=2) )),
               tags$li(paste('Curtailment:',format(Curtailment,digits=2) ))),
-            
-            div(style = 'border-style: double', 
+
+            div(style = 'border-style: double',
                 class=' rounded-3 border-4 text-muted text-center','Dispatch Down',
                 h5(class = 'fw-bold','MWh/year',f(`Dispatch Down`)))
-            
+
           ))) %>%
          # mutate(`Cumulative Demand (MWh)`) %>%
           # select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`, `Cumulative Demand (MWh)`,
-          #        `Cumulative RES (MWh)`   ,`Cumulative Dispatch Down (MWh)`) %>% 
-          select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`) %>% 
+          #        `Cumulative RES (MWh)`   ,`Cumulative Dispatch Down (MWh)`) %>%
+          select(Target, year, Flow, Renewables, SNSP,Demand,  `Dispatch Down`) %>%
           DT::datatable(height = '100vh',
-                        escape = F, 
-                        
+                        escape = F,
+
                         rownames=F,
                         selection='none',
                         options = list(dom = '',ordering = FALSE,pageLength = 10, scrollX = TRUE))

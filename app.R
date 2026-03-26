@@ -78,6 +78,7 @@ ui <- navbarPage(
     tags$link(rel = "stylesheet", href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"),
     tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"),
     tags$script(src = "https://polyfill.io/v3/polyfill.min.js?features=es6"),
+    tags$script( src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"),
     tags$script(id = "MathJax-script", async = TRUE, src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"),
     
     # Local custom files
@@ -89,7 +90,7 @@ ui <- navbarPage(
     tags$script(src = "js/progress-handlers.js"),
     tags$script(src = "js/radio-handlers.js"),
     tags$script(src = "js/input_date_handlers.js"),
-    
+
     tags$script(HTML("
       Shiny.addCustomMessageHandler('toggleLoadingBtn', function(state) {
         if (state === 'show') {

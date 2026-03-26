@@ -1,14 +1,21 @@
 /* Energy App Custom Styles */
 
 /* Smooth scrolling */
+
 html {
   scroll-behavior: smooth;
   font-size:80%  !important;
 }
 
-body{
+
+shiny-error-console {
+    visibility: hidden;
 }
 
+.shiny-error {
+  scroll-behavior: smooth;
+  font-size:80%  !important;
+}
 .tab-pane{
   margin-top:0px !important;
 }
@@ -26,7 +33,7 @@ body{
   transform: rotate(180deg);
   border-radius: .5rem;
 
-  /* Lumen-friendly vars */
+  
   --bar: var(--bs-gray-600, #dee2e6);
   --barW: 10%;        /* bar width */
   --baseY: 85%;       /* baseline position from top (acts like x-axis) */
