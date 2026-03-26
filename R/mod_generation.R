@@ -7,7 +7,7 @@ library(promises)
 library(memoise)
 library(digest)
 library(echarts4r)
-print('f')
+
 #ui
 f <- function(p){format(big.mark=',',round(p))}
 
@@ -216,28 +216,28 @@ br(),br(),
                     )
                   )
                 ),
-                div(
-                  class = "input-group mb-2",
-                  tags$label(
-                    class = "form-control",
-                    `for` = ns("reduce_moyle"),
-                    "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector"
-                  ),
-                  tags$label(
-                    class = "input-group-text",
-                    `for` = ns("reduce_moyle"),
-                    h5(class = 'h4 fw-bold',2026)
-                  ),
-                  div(
-                    class = "input-group-text",
-                    tags$input(
-                      type = "checkbox",
-                      class = "form-check-input mt-0",
-                      id = ns("reduce_moyle"),
-                      autocomplete = "off"
-                    )
-                  )
-                )
+                # div(
+                #   class = "input-group mb-2",
+                #   tags$label(
+                #     class = "form-control",
+                #     `for` = ns("reduce_moyle"),
+                #     "Perform a review of ability of the TSO to reduce the net transfer capacity of the Moyle HVDC interconnector"
+                #   ),
+                #   tags$label(
+                #     class = "input-group-text",
+                #     `for` = ns("reduce_moyle"),
+                #     h5(class = 'h4 fw-bold',2026)
+                #   ),
+                #   div(
+                #     class = "input-group-text",
+                #     tags$input(
+                #       type = "checkbox",
+                #       class = "form-check-input mt-0",
+                #       id = ns("reduce_moyle"),
+                #       autocomplete = "off"
+                #     )
+                #   )
+                # )
               ),
               
               tags$script(HTML(sprintf("
@@ -717,6 +717,35 @@ br(),br(),
 generation_server <- function(id, state) {
   moduleServer(id, function(input, output, session) {
     
+    # Validate required data structures exist
+    if (!exists("combined_df", envir = .GlobalEnv)) {
+      showNotification("Error: combined_df not loaded. Please ensure data/inputs.rda is available.", 
+                       type = "error", duration = NULL)
+      return(NULL)
+    }
+    
+    if (!exists("daily_median_snsp", envir = .GlobalEnv)) {
+      showNotification("Error: daily_median_snsp not loaded. Please ensure data/inputs.rda is available.", 
+                       type = "error", duration = NULL)
+      return(NULL)
+    }
+    
+    if (!exists("monthly_median_snsp", envir = .GlobalEnv)) {
+      showNotification("Error: monthly_median_snsp not loaded. Please ensure data/inputs.rda is available.", 
+                       type = "error", duration = NULL)
+      return(NULL)
+    }
+    
+    # Additional validation - check data quality
+    validate(
+      need(is.data.frame(combined_df) && nrow(combined_df) > 0, 
+           "Historical data (combined_df) is empty or invalid"),
+      need(is.data.frame(daily_median_snsp) && nrow(daily_median_snsp) > 0,
+           "Daily SNSP data is empty or invalid"),
+      need(is.data.frame(monthly_median_snsp) && nrow(monthly_median_snsp) > 0,
+           "Monthly SNSP data is empty or invalid")
+    )
+    
     new_renewables_reactive <- reactive({
       state$renewables_run
       offshore_wind <- read.csv('offshore_wind.csv')
@@ -1043,6 +1072,11 @@ generation_server <- function(id, state) {
     )
 
     output$snsp_plot <- renderPlot({
+      req(exists("daily_median_snsp", envir = .GlobalEnv))
+      req(exists("monthly_median_snsp", envir = .GlobalEnv))
+      req(is.data.frame(daily_median_snsp), nrow(daily_median_snsp) > 0)
+      req(is.data.frame(monthly_median_snsp), nrow(monthly_median_snsp) > 0)
+      
       ggplot2::ggplot() +
         ggplot2::geom_point(
           data = daily_median_snsp,
@@ -1099,6 +1133,9 @@ generation_server <- function(id, state) {
     
     observeEvent(input$selected_date, {
       req(input$selected_date)
+      req(exists("combined_df", envir = .GlobalEnv))
+      req(is.data.frame(combined_df), nrow(combined_df) > 0)
+      
       new_row <- combined_df %>%
         dplyr::filter(.data$date == as.Date(input$selected_date)) %>%
         dplyr::transmute(
@@ -1284,14 +1321,16 @@ generation_server <- function(id, state) {
     
 #---RES and demand distributions
     res_vec <- reactive({
-      req(combined_df)
+      req(exists("combined_df", envir = .GlobalEnv))
+      req(is.data.frame(combined_df), nrow(combined_df) > 0)
       v <- combined_df$sum_res
       validate(need(length(v) > 0, "RES: no data available."))
       pmax(v, 0)
     })
     
     demand_vec <- reactive({
-      req(combined_df)
+      req(exists("combined_df", envir = .GlobalEnv))
+      req(is.data.frame(combined_df), nrow(combined_df) > 0)
       v <- combined_df$sum_demand
       validate(need(length(v) > 0, "Demand: no data available."))
       pmax(v, 0)
@@ -1721,7 +1760,7 @@ generation_server <- function(id, state) {
     })
     
     combined_forecast_ci <- reactive({
-      # req(results_last3)
+      req(results_last3)
       
       vars <- names(results_last3)
       choices <- setNames(
@@ -1791,6 +1830,24 @@ generation_server <- function(id, state) {
           df_all <- df_all %>%
             mutate(sum_avai_wind = dplyr::coalesce(lo95_avai_wind, sum_avai_wind))
         }
+        
+        {
+          fc  <- results_last3$sum_import$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_sum_import <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_import = dplyr::coalesce(hi95_sum_import, sum_import))
+        }
+        
+        {
+          fc  <- results_last3$sum_export$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_sum_export <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_export = dplyr::coalesce(lo95_sum_export, sum_export))
+        }
       }
       
       if (scenario == "best") {
@@ -1837,6 +1894,24 @@ generation_server <- function(id, state) {
           hi95_avai_wind <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
           df_all <- df_all %>%
             mutate(sum_avai_wind = dplyr::coalesce(hi95_avai_wind, sum_avai_wind))
+        }
+        
+        {
+          fc  <- results_last3$sum_import$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "lo95")
+          lo95_sum_import <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_import = dplyr::coalesce(lo95_sum_import, sum_import))
+        }
+        
+        {
+          fc  <- results_last3$sum_export$forecast
+          fcd <- as.Date(fc$date, origin = "1970-01-01")
+          col <- pick_fc_col(fc, "hi95")
+          hi95_sum_export <- fc[[col]][ match(as.Date(df_all$date), fcd) ]
+          df_all <- df_all %>%
+            mutate(sum_export = dplyr::coalesce(hi95_sum_export, sum_export))
         }
       }
       
@@ -2145,7 +2220,7 @@ generation_server <- function(id, state) {
         e_tooltip(formatter = e_tooltip_item_formatter("percent")) %>% 
         # e_x_axis(label = 'Time', type='time') %>%
         e_theme('walden') %>% 
-        e_title('Dispatch Down', 'Availability - Generation')
+        e_title('Percentage of Available RES Generated')
         
     })
     
@@ -2347,11 +2422,12 @@ generation_server <- function(id, state) {
       )
     }, digits = 3, rownames = FALSE)
     
-    
     output$last_year_sums_table_dt <- renderUI({
-      print('combined_forecast_ci()')
-      print(combined_forecast_ci())
-      print('----------------------')
+      # print('combined_forecast_ci()')
+      # print(combined_forecast_ci())
+      # print('----------------------')
+      
+      req(combined_forecast_ci())
       
       df <- combined_forecast_ci()
       
@@ -2627,13 +2703,11 @@ generation_server <- function(id, state) {
     })
     
     output$last_year_net_energy_flow <- renderText({
-      round(
-        last_year_net_energy_flow() )  
+      paste(last_year_net_energy_flow()   ,'MW') 
     })
     
     output$last_year_change_in_dispatch_down <- renderText({
-      round(
-        last_year_change_in_dispatch_down() )  
+      paste(last_year_change_in_dispatch_down()  ,'MW') 
     })
 
     
@@ -2668,7 +2742,7 @@ generation_server <- function(id, state) {
         summarise(across(which(num_cols), sum, na.rm = TRUE))
       
       target <- yearly_df$Exports - yearly_df$Imports 
-      target <- target/10e6
+      target <- round( target/1e2) / 10
 
       
       return(target)  
@@ -2687,7 +2761,7 @@ generation_server <- function(id, state) {
         summarise(across(which(num_cols), sum, na.rm = TRUE))
       
       target <- first(yearly_df$`Dispatch Down`) - last(yearly_df$`Dispatch Down`)
-      target <- target/10e6
+      target <- round( target/1e2) / 10
       
       return(target)  
     })
@@ -2797,8 +2871,8 @@ generation_server <- function(id, state) {
         
         mutate(#`Dispatch Down Wind` = round(`Dispatch Down Wind`/100)/10,
                #`Dispatch Down Solar` = round(`Dispatch Down Solar`/100)/10,
-               `Generated Wind` = round(`Generated Wind`/10)/100,
-               `Generated Solar` = round(`Generated Solar`/10)/100
+               `Generated Wind` = round(`Generated Wind`/100)/10,
+               `Generated Solar` = round(`Generated Solar`/100)/10
         ) %>% 
         
         select(q, Demand, Imports, Exports, #`Dispatch Down Wind`, `Dispatch Down Solar`,
@@ -2829,14 +2903,15 @@ generation_server <- function(id, state) {
           #                              format = colFormat(digits = 1)#,
           #                              # style = 'padding-right:10px;border-right: 4px solid #555;'
           # ),
-          # `Dispatch Down Wind` = colDef(name = 'Wind',html = TRUE,
-          #                             style = function(value) {
-          #                               if (!is.numeric(value)) return()
-          #                               normalized <- (as.numeric(value) - min(x$`Dispatch Down Wind`)) / (max(x$`Dispatch Down Wind`) - min(x$`Dispatch Down Wind`))
-          #                               color <- Blues_alpha(normalized)
-          #                               list(background = color)
-          #                             },
-          #                             format = colFormat(digits = 1)),
+          
+          `Dispatch Down Wind` = colDef(name = 'Wind',html = TRUE,
+                                      style = function(value) {
+                                        if (!is.numeric(value)) return()
+                                        normalized <- (as.numeric(value) - min(x$`Dispatch Down Wind`)) / (max(x$`Dispatch Down Wind`) - min(x$`Dispatch Down Wind`))
+                                        color <- Blues_alpha(normalized)
+                                        list(background = color)
+                                      },
+                                      format = colFormat(digits = 1)),
           
           # Generated.Solar = colDef(name = 'Solar', html = F),
           
@@ -2844,20 +2919,20 @@ generation_server <- function(id, state) {
           
           Demand = colDef(minWidth = 100, align = "left", cell = function(value) {
             width <- paste0(value / max(as.numeric(x$Demand)) * 100, "%")
-            print(width)
+            
             bar_chart(value,fill = "black", width = width)
           }),
           Imports = colDef(minWidth = 100, 
                            cell = function(value) {
                              width <- paste0(value / max(as.numeric(x$Imports)) * 100, "%")
-                             print(width)
+                             
                              bar_chart(value,fill = "lightgreen", width = width)
                            }),
           Exports = colDef(minWidth = 100, 
                            style =list(paddingRight='10px',borderRight= '1px solid #555'),
                            cell = function(value) {
                              width <- paste0(value / max(as.numeric(x$Exports)) * 100, "%")
-                             print(width)
+                             
                              bar_chart(value,fill = "lightblue", width = width)
                            }),
           
@@ -2885,8 +2960,7 @@ generation_server <- function(id, state) {
             style = function(value) {
               if (!is.numeric(value)) return()
               normalized <- (as.numeric(value) - min(.$`Generated Solar`)) / (max(.$`Generated Solar`) - min(.$`Generated Solar`))
-              print('value')
-              print(value)
+              
               color <- Yellows(normalized)
               list(background = color)
             },
@@ -2899,7 +2973,6 @@ generation_server <- function(id, state) {
               if (!is.numeric(value)) return()
               normalized <- (as.numeric(value) - min(.$`Generated Wind`)) / (max(.$`Generated Wind`) - min(.$`Generated Wind`))
               color <- Blues(normalized)
-              print(value)
               
               list(background = color)
             },
@@ -2915,7 +2988,7 @@ generation_server <- function(id, state) {
     output$yearly_sums_table_dt <- renderDT({
       # print('combined_forecast_ci()')
       # print(combined_forecast_ci())
-      print('----------------------')
+      # print('----------------------')
 
       df <- combined_forecast_ci()
 
@@ -2989,7 +3062,7 @@ generation_server <- function(id, state) {
       #   mutate(across(-c('Curtailment SNSP','year'),
       #                 ~as.numeric(round(.x))))
         
-      print(yearly_df)
+      # print(yearly_df)
       
       
       yearly_df %>%
@@ -3114,15 +3187,15 @@ generation_server <- function(id, state) {
     #   yearly_df_2
     #   }, digits = 3, rownames = FALSE)
     
-    sheet1_df <- read_excel(
+    sheet1_df <- suppressWarnings(read_excel(
       "./data/policy_uplift.xlsx",
       sheet = "all_3"
-    )
+    ))
     
-    sheet2_df <- read_excel(
+    sheet2_df <- suppressWarnings(read_excel(
       "./data/policy_uplift.xlsx",
       sheet = "last3_3"
-    )
+    ))
     
     sheet1_df <- sheet1_df %>%
       select("Policy", "Year", "RES increase", "Target increase", "dispatch down decrease percentage")

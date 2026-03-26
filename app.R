@@ -1,5 +1,3 @@
-# Combined Energy Planning Dashboard
-
 print('e')
 library(shiny)
 library(bslib)
@@ -10,6 +8,8 @@ library(promises)
 library(memoise)
 library(digest)
 library(echarts4r)
+
+
 
 # Load renewable simulation sources
 options(shiny.devmode = TRUE)
@@ -802,32 +802,32 @@ ui <- navbarPage(
     ),
     
     # Footer section
-    div(class = "container",
-        tags$footer(class = "d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top",
-                    p(class = "col-md-4 mb-0 text-body-secondary", "© 80% by 2030"),
-                    tags$a(href = "#top", class = "col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none",
-                           #icon("bolt", style = "font-size: 32px; color: #2196F3;"),
-                           img(src = 'static/DfE.jpeg', height = "29", class = "ms-2")
-                    ),
-                    tags$ul(class = "nav col-md-4 justify-content-end",
-                            tags$li(class = "nav-item",
-                                    tags$a(href = "#parameters", class = "nav-link px-2 text-body-secondary", "NI")
-                            ),
-                            tags$li(class = "nav-item",
-                                    tags$a(href = "#capacity", class = "nav-link px-2 text-body-secondary", "Capacity")
-                            ),
-                            tags$li(class = "nav-item",
-                                    tags$a(href = "#progression", class = "nav-link px-2 text-body-secondary", "Progression")
-                            ),
-                            tags$li(class = "nav-item",
-                                    tags$a(href = "#timelines", class = "nav-link px-2 text-body-secondary", "Duration")
-                            )#,
-                            # tags$li(class = "nav-item",
-                            #   tags$a(href = "#dashboard", class = "nav-link px-2 text-body-secondary", "Dashboard")
-                            # )
-                    )
-        )
-    )
+    # div(class = "container",
+    #     tags$footer(class = "d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top",
+    #                 p(class = "col-md-4 mb-0 text-body-secondary", "© 80% by 2030"),
+    #                 tags$a(href = "#top", class = "col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none",
+    #                        #icon("bolt", style = "font-size: 32px; color: #2196F3;"),
+    #                        img(src = 'static/DfE.jpeg', height = "29", class = "ms-2")
+    #                 ),
+    #                 tags$ul(class = "nav col-md-4 justify-content-end",
+    #                         tags$li(class = "nav-item",
+    #                                 tags$a(href = "#parameters", class = "nav-link px-2 text-body-secondary", "NI")
+    #                         ),
+    #                         tags$li(class = "nav-item",
+    #                                 tags$a(href = "#capacity", class = "nav-link px-2 text-body-secondary", "Capacity")
+    #                         ),
+    #                         tags$li(class = "nav-item",
+    #                                 tags$a(href = "#progression", class = "nav-link px-2 text-body-secondary", "Progression")
+    #                         ),
+    #                         tags$li(class = "nav-item",
+    #                                 tags$a(href = "#timelines", class = "nav-link px-2 text-body-secondary", "Duration")
+    #                         )#,
+    #                         # tags$li(class = "nav-item",
+    #                         #   tags$a(href = "#dashboard", class = "nav-link px-2 text-body-secondary", "Dashboard")
+    #                         # )
+    #                 )
+    #     )
+    # )
     ),
   
   # Tab 2: Energy Flow Diagram (original app1.R content)
@@ -835,6 +835,33 @@ ui <- navbarPage(
     icon = icon("diagram-project"),
     value = "energy_flow_tab",
     uiOutput("main_ui")
+  ),
+  
+  div(class = "container",
+      tags$footer(class = "d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top",
+                  p(class = "col-md-4 mb-0 text-body-secondary", "© 80% by 2030"),
+                  tags$a(href = "#top", class = "col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none",
+                         #icon("bolt", style = "font-size: 32px; color: #2196F3;"),
+                         img(src = 'static/DfE.jpeg', height = "29", class = "ms-2")
+                  ),
+                  tags$ul(class = "nav col-md-4 justify-content-end",
+                          tags$li(class = "nav-item",
+                                  tags$a(href = "#parameters", class = "nav-link px-2 text-body-secondary", "NI")
+                          ),
+                          tags$li(class = "nav-item",
+                                  tags$a(href = "#capacity", class = "nav-link px-2 text-body-secondary", "Capacity")
+                          ),
+                          tags$li(class = "nav-item",
+                                  tags$a(href = "#progression", class = "nav-link px-2 text-body-secondary", "Progression")
+                          ),
+                          tags$li(class = "nav-item",
+                                  tags$a(href = "#timelines", class = "nav-link px-2 text-body-secondary", "Duration")
+                          )#,
+                          # tags$li(class = "nav-item",
+                          #   tags$a(href = "#dashboard", class = "nav-link px-2 text-body-secondary", "Dashboard")
+                          # )
+                  )
+      )
   )
 )
 
@@ -1794,6 +1821,10 @@ observe({
        
   
 }
+
+
+
+
 
 
 shinyApp(ui, server)

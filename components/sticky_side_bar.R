@@ -19,16 +19,16 @@ sticky_side_bar <- function(ns) {
           div(
             style = "background:white;border:5px solid cornflowerblue;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin:20px auto;",
             tags$small(class='text-muted','SNSP'),
-            h5(textOutput(ns('last_year_snsp')), '%'),
+            h4(textOutput(ns('last_year_snsp')) ),
             # tags$small(class='text-muted text-black text-center','Pre-planning Pipeline'),
-            tags$div(class='h4 text-black text-centre text-center','up to end 2030')
+            tags$div(class='h3 text-black text-centre text-center','at end 2030')
           ),
           
           div(
             style = "background:white;border:5px solid #FFDE21;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin:10px auto;",
             tags$small(class='text-muted', 'Net Energy Flow'),
-            h3(textOutput(ns('last_year_net_energy_flow')), 'MW'),
-            tags$small(class='text-muted text-centre text-center','current pipeline to 2030')
+            h3(textOutput(ns('last_year_net_energy_flow')) ),
+            tags$small(class='text-muted text-centre text-center',' pipeline at 2030')
           ),
 
         
@@ -36,8 +36,8 @@ sticky_side_bar <- function(ns) {
           div(class = 'shadow-sm',
               style = "background:white;border:5px solid salmon;justify-content:center;border-radius:35px;display:flex;flex-direction:column;align-items:center;width:150px;height:150px;margin:20px auto;",
               tags$small(class='text-muted', 'Change in Dispatch Down'),
-              h4(span(textOutput(ns('last_year_change_in_dispatch_down')), "MW/yr")),
-              tags$small(class='text-muted text-centre text-center',' by 2030')
+              h4(span(textOutput(ns('last_year_change_in_dispatch_down')) )),
+              tags$small(class='text-muted text-centre text-center',' 2025 to 2030')
           )
       )
   )

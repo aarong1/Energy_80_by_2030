@@ -5,8 +5,8 @@ library(tidyverse)
 # ni_repd <- read_excel("./data/renewable-energy-planning-applications-list-april-2002-to-march-2025 (1).xlsx", 
 #                            sheet = "List")
 
-uk_repd <- read_excel("./data/repd-q1-apr-2025 (1).xlsx",
-                      sheet = "REPD")
+uk_repd <- suppressWarnings(read_excel("./data/repd-q1-apr-2025 (1).xlsx",
+                      sheet = "REPD"))
 (
   pipeline <-  uk_repd |> 
     filter(uk_repd$Country == 'Northern Ireland') |> 

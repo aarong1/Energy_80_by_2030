@@ -1,8 +1,9 @@
 
 diagram_ui <- function(id) {
   ns <- NS(id)
+  
   tagList(
-    div(class = "centered-content",
+    div(class = "centered-content", 
         h2("Overview of Electricity Industry"),
         p("For more details about each part, please click on it.",
           style = "margin-bottom: 50px;"),
