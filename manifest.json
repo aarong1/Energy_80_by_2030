@@ -2085,6 +2085,34 @@
         "Archs": "isoband.so.dSYM"
       }
     },
+    "janitor": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "janitor",
+        "Title": "Simple Tools for Examining and Cleaning Dirty Data",
+        "Version": "2.2.1",
+        "Authors@R": "c(person(\"Sam\", \"Firke\", email = \"samuel.firke@gmail.com\", role = c(\"aut\", \"cre\")),\n    person(\"Bill\", \"Denney\", email = \"wdenney@humanpredictions.com\", role = \"ctb\"),\n    person(\"Chris\", \"Haid\", email = \"chrishaid@gmail.com\", role = \"ctb\"),\n    person(\"Ryan\", \"Knight\", email = \"ryangknight@gmail.com\", role = \"ctb\"),\n    person(\"Malte\", \"Grosser\", email = \"malte.grosser@gmail.com\", role = \"ctb\"),\n    person(\"Jonathan\", \"Zadra\", email = \"jonathan.zadra@sorensonimpact.com\", role = \"ctb\"))",
+        "Description": "The main janitor functions can: perfectly format data.frame column\n    names; provide quick counts of variable combinations (i.e., frequency\n    tables and crosstabs); and explore duplicate records. Other janitor functions\n    nicely format the tabulation results. These tabulate-and-report functions\n    approximate popular features of SPSS and Microsoft Excel. This package\n    follows the principles of the \"tidyverse\" and works well with the pipe function\n    %>%. janitor was built with beginning-to-intermediate R users in mind and is\n    optimized for user-friendliness.",
+        "URL": "https://github.com/sfirke/janitor,\nhttps://sfirke.github.io/janitor/",
+        "BugReports": "https://github.com/sfirke/janitor/issues",
+        "Depends": "R (>= 3.1.2)",
+        "Imports": "dplyr (>= 1.0.0), hms, lifecycle, lubridate, magrittr, purrr,\nrlang, stringi, stringr, snakecase (>= 0.9.2), tidyselect (>=\n1.0.0), tidyr (>= 0.7.0)",
+        "License": "MIT + file LICENSE",
+        "RoxygenNote": "7.2.3",
+        "Suggests": "dbplyr, knitr, rmarkdown, RSQLite, sf, testthat (>= 3.0.0),\ntibble, tidygraph",
+        "VignetteBuilder": "knitr",
+        "Encoding": "UTF-8",
+        "Config/testthat/edition": "3",
+        "NeedsCompilation": "no",
+        "Packaged": "2024-12-22 15:53:13 UTC; sam",
+        "Author": "Sam Firke [aut, cre],\n  Bill Denney [ctb],\n  Chris Haid [ctb],\n  Ryan Knight [ctb],\n  Malte Grosser [ctb],\n  Jonathan Zadra [ctb]",
+        "Maintainer": "Sam Firke <samuel.firke@gmail.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2024-12-22 16:30:01 UTC",
+        "Built": "R 4.5.0; ; 2025-04-02 08:32:41 UTC; unix"
+      }
+    },
     "jquerylib": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -2843,6 +2871,34 @@
         "Built": "R 4.5.0; ; 2025-03-31 21:41:54 UTC; unix"
       }
     },
+    "plotly": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "plotly",
+        "Title": "Create Interactive Web Graphics via 'plotly.js'",
+        "Version": "4.12.0",
+        "Authors@R": "c(person(\"Carson\", \"Sievert\", role = c(\"aut\", \"cre\"),\n    email = \"cpsievert1@gmail.com\", comment = c(ORCID = \"0000-0002-4958-2844\")),\n    person(\"Chris\", \"Parmer\", role = \"aut\",\n    email = \"chris@plot.ly\"),\n    person(\"Toby\", \"Hocking\", role = \"aut\",\n    email = \"tdhock5@gmail.com\"),\n    person(\"Scott\", \"Chamberlain\", role = \"aut\",\n    email = \"myrmecocystus@gmail.com\"),\n    person(\"Karthik\", \"Ram\", role = \"aut\",\n    email = \"karthik.ram@gmail.com\"),\n    person(\"Marianne\", \"Corvellec\", role = \"aut\",\n    email = \"marianne.corvellec@igdore.org\", comment = c(ORCID = \"0000-0002-1994-3581\")),\n    person(\"Pedro\", \"Despouy\", role = \"aut\",\n    email = \"pedro@plot.ly\"),\n    person(\"Salim\", \"Brüggemann\", role = \"ctb\",\n    email = \"salim-b@pm.me\", comment = c(ORCID = \"0000-0002-5329-5987\")),\n    person(\"Plotly Technologies Inc.\", role = \"cph\"))",
+        "License": "MIT + file LICENSE",
+        "Description": "Create interactive web graphics from 'ggplot2' graphs and/or a custom interface to the (MIT-licensed) JavaScript library 'plotly.js' inspired by the grammar of graphics.",
+        "URL": "https://plotly-r.com, https://github.com/plotly/plotly.R,\nhttps://plotly.com/r/",
+        "BugReports": "https://github.com/plotly/plotly.R/issues",
+        "Depends": "R (>= 3.5.0), ggplot2 (>= 3.0.0)",
+        "Imports": "tools, scales, httr (>= 1.3.0), jsonlite (>= 1.6), magrittr,\ndigest, viridisLite, base64enc, htmltools (>= 0.3.6),\nhtmlwidgets (>= 1.5.2.9001), tidyr (>= 1.0.0), RColorBrewer,\ndplyr, vctrs, tibble, lazyeval (>= 0.2.0), rlang (>= 1.0.0),\ncrosstalk, purrr, data.table, promises",
+        "Suggests": "MASS, maps, hexbin, ggthemes, GGally, ggalluvial, testthat,\nknitr, shiny (>= 1.1.0), shinytest2, curl, rmarkdown, Cairo,\nbroom, webshot, listviewer, dendextend, sf, png, IRdisplay,\nprocessx, plotlyGeoAssets, forcats, withr, palmerpenguins,\nrversions, reticulate, rsvg, ggridges",
+        "LazyData": "true",
+        "RoxygenNote": "7.3.3",
+        "Encoding": "UTF-8",
+        "Config/Needs/check": "tidyverse/ggplot2, ggobi/GGally, rcmdcheck,\ndevtools, reshape2, s2",
+        "NeedsCompilation": "no",
+        "Packaged": "2026-01-24 00:53:27 UTC; cpsievert",
+        "Author": "Carson Sievert [aut, cre] (ORCID:\n    <https://orcid.org/0000-0002-4958-2844>),\n  Chris Parmer [aut],\n  Toby Hocking [aut],\n  Scott Chamberlain [aut],\n  Karthik Ram [aut],\n  Marianne Corvellec [aut] (ORCID:\n    <https://orcid.org/0000-0002-1994-3581>),\n  Pedro Despouy [aut],\n  Salim Brüggemann [ctb] (ORCID: <https://orcid.org/0000-0002-5329-5987>),\n  Plotly Technologies Inc. [cph]",
+        "Maintainer": "Carson Sievert <cpsievert1@gmail.com>",
+        "Repository": "CRAN",
+        "Date/Publication": "2026-01-24 07:50:02 UTC",
+        "Built": "R 4.5.2; ; 2026-01-24 08:05:52 UTC; unix"
+      }
+    },
     "png": {
       "Source": "CRAN",
       "Repository": "https://cran.rstudio.com",
@@ -3240,7 +3296,7 @@
     },
     "reactablefmtr": {
       "Source": "CRAN",
-      "Repository": "https://cran.rstudio.com",
+      "Repository": null,
       "description": {
         "Package": "reactablefmtr",
         "Type": "Package",
@@ -3737,6 +3793,34 @@
         "Repository": "CRAN",
         "Date/Publication": "2025-04-21 21:30:02 UTC",
         "Built": "R 4.5.0; ; 2025-04-21 22:14:20 UTC; unix"
+      }
+    },
+    "snakecase": {
+      "Source": "CRAN",
+      "Repository": "https://cran.rstudio.com",
+      "description": {
+        "Package": "snakecase",
+        "Version": "0.11.1",
+        "Date": "2023-08-27",
+        "Title": "Convert Strings into any Case",
+        "Description": "A consistent, flexible and easy to use tool to parse and convert strings into cases like snake or camel among others.",
+        "Authors@R": "c(\n    person(\"Malte\", \"Grosser\", , \"malte.grosser@gmail.com\", role = c(\"aut\", \"cre\")))",
+        "Maintainer": "Malte Grosser <malte.grosser@gmail.com>",
+        "Depends": "R (>= 3.2)",
+        "Imports": "stringr, stringi",
+        "Suggests": "testthat, covr, tibble, purrrlyr, knitr, rmarkdown, magrittr",
+        "URL": "https://github.com/Tazinho/snakecase",
+        "BugReports": "https://github.com/Tazinho/snakecase/issues",
+        "Encoding": "UTF-8",
+        "License": "GPL-3",
+        "RoxygenNote": "6.1.1",
+        "VignetteBuilder": "knitr",
+        "NeedsCompilation": "no",
+        "Packaged": "2023-08-27 20:30:20 UTC; malte",
+        "Author": "Malte Grosser [aut, cre]",
+        "Repository": "CRAN",
+        "Date/Publication": "2023-08-27 22:50:09 UTC",
+        "Built": "R 4.5.0; ; 2025-04-01 16:08:13 UTC; unix"
       }
     },
     "sourcetools": {
@@ -4706,10 +4790,10 @@
       "checksum": "17c9149997721423c7cb89e25c8cda0e"
     },
     ".RData": {
-      "checksum": "14a0da07c0dfda12036c3e770cf939c3"
+      "checksum": "35bf0a1e9e871343756bbf15b6a36ce0"
     },
     "1_pipeline_state.R": {
-      "checksum": "bdcb96e2d406d0f76e7ca3e93dd7ef3d"
+      "checksum": "a966124f14d055854f9c519a279b6013"
     },
     "2_project_progression.R": {
       "checksum": "b1fe5cbf90f29381d03e9e9c829163ca"
@@ -4739,7 +4823,7 @@
       "checksum": "d9cff97501701f9f260bd2f786ba1fe9"
     },
     "80pc_2030_rachel_sankannarwar.key": {
-      "checksum": "c352698ce5242fc0927ea20d3d16d270"
+      "checksum": "9dfa6027ece9a82c444d8033b99f408b"
     },
     "80pct_2030_report.pdf": {
       "checksum": "2c5b06806118bcd92245df409233be80"
@@ -4760,7 +4844,7 @@
       "checksum": "2acea8744cc5ceb2481094e2a1d770c5"
     },
     "app.R": {
-      "checksum": "93698d873a9e533507f725bb43a4f0ca"
+      "checksum": "aed830838af4f4b5a46f0ac4bca955e8"
     },
     "app1.R": {
       "checksum": "4bf4c191066862be6109ff94165c12b7"
@@ -4772,13 +4856,13 @@
       "checksum": "6fd804d54517818deb7a542f2d453b18"
     },
     "components/circular_value.R": {
-      "checksum": "6b6f94151022d32382b1eb9ab76f0856"
+      "checksum": "7cda687d71e2596330bea9c0ea0bbd7c"
     },
     "components/colour_scale_bar.R": {
       "checksum": "5031fdf70223a49f0d68e8f771b01692"
     },
     "components/sticky_side_bar.R": {
-      "checksum": "4e91cc7bf884f428d9311ff85af42748"
+      "checksum": "60711b4e548ba990f4b4866ca8a62027"
     },
     "current_projects_projected_forward.csv": {
       "checksum": "a0425b85b0f5dbf7f30f470de4bccbcd"
@@ -4811,7 +4895,7 @@
       "checksum": "e2599d1db2f54b220215eac885d2c9cd"
     },
     "data/policy_uplift.xlsx": {
-      "checksum": "6518d4cd82a8e0c308266f79df98dc84"
+      "checksum": "743f95a6b61bd0e7f64a1127918bc12e"
     },
     "data/renewable-energy-planning-applications-list-april-2002-to-march-2025 (1).xlsx": {
       "checksum": "106401466b96a6eb80926d2d6dcacb4d"
@@ -4831,8 +4915,32 @@
     "data/Subnational_total_final_consumption_2005_2022.xlsx": {
       "checksum": "040c86f727200dd2999bff9cb81fb349"
     },
+    "data/TDPNI_asset_replacement_d5_clean.xlsx": {
+      "checksum": "a369c8a66e5f2a84fd7409bc29e4229a"
+    },
+    "data/TDPNI_asset_replacement_rp6_clean.xlsx": {
+      "checksum": "51899f6901d1af2e861c9cca470e814b"
+    },
+    "data/TDPNI_asset_replacement_rp7_clean.xlsx": {
+      "checksum": "2d02189047f3e070bc187f894b221a1f"
+    },
+    "data/TDPNI_network_development_45_new_projects_clean.xlsx": {
+      "checksum": "d1feb6eb7dffa4c89bc5dcd6ff6625d9"
+    },
+    "data/TDPNI_network_development_45_projects_changes_clean.xlsx": {
+      "checksum": "a98a2eff1b8b447082eacc7eb685c7ad"
+    },
+    "data/TDPNI_network_development_45_whole_projects_both_area_clean.xlsx": {
+      "checksum": "d27e68bfa7ee242329e60b7838375396"
+    },
+    "data/TDPNI_network_development_45_whole_projects_north_west_clean.xlsx": {
+      "checksum": "b8eb7f61495edd952dc46be099f12e97"
+    },
+    "data/TDPNI_network_development_45_whole_projects_south_east_clean.xlsx": {
+      "checksum": "fe464ee93d894d2da79e5cb602904656"
+    },
     "energy_grade5_24_02_26.key": {
-      "checksum": "619e5e44f97365918b2108573978e459"
+      "checksum": "f2337a1b7f4e30c6f22c5271b956d64c"
     },
     "energy_reports.pages": {
       "checksum": "798c1c5c49ff8ace0e3c1bce5159b1a6"
@@ -4879,9 +4987,6 @@
     "offshore_wind.csv": {
       "checksum": "bb4b37013d8517ec701751a2bca0db3d"
     },
-    "preprocess/clean_realtime_data.R": {
-      "checksum": "3ab8168bc7c625617ca05afed0290e87"
-    },
     "preprocess/functions.R": {
       "checksum": "109929b630183951fa27cc0f851ef627"
     },
@@ -4892,19 +4997,19 @@
       "checksum": "d7a222ea0c028fb2a5d0548730b6c066"
     },
     "R/mod_diagram.R": {
-      "checksum": "60f94d89997fabd385ea37a571b9c156"
+      "checksum": "d519d63967af7db8f5b482416d9472b8"
     },
     "R/mod_distribution.R": {
-      "checksum": "25c829902472bd8b6e0d46dee9c1d086"
+      "checksum": "ac5a2158557b4167cce38f7779db8695"
     },
     "R/mod_generation.R": {
-      "checksum": "7c727c8a4ac6f179cbc9b7d28564401b"
+      "checksum": "de199fb36b7509d53bc6ca7a307bd32e"
     },
     "R/mod_supply.R": {
       "checksum": "a4d566bfa21729b91cc6dec5c12a3698"
     },
     "R/mod_transmission.R": {
-      "checksum": "04ca7d01b48e042ec4171f17a6dd6801"
+      "checksum": "36d070643b5565f72ab54770cdf30dfb"
     },
     "RenewableNI_accelarating_renewables.rtf": {
       "checksum": "15eacc8d8431b7a243e5b74ddb58862b"
@@ -4948,6 +5053,12 @@
     "resources/TES-2023-Final-Full-Report.pdf": {
       "checksum": "3e5a3b68498f5a2f5bd941ff453f7c8b"
     },
+    "swiper.R": {
+      "checksum": "74c4170346b4e8c99a9887404f6eff8a"
+    },
+    "swiperJS.R": {
+      "checksum": "d1348948292511bd326d8d086d83b489"
+    },
     "test_applications/app_brite.R": {
       "checksum": "ef820183c405e8413836e562402d5747"
     },
@@ -4976,10 +5087,13 @@
       "checksum": "d1ba784aecdd513c5de0adfe64703422"
     },
     "visualisation_experiments.R": {
-      "checksum": "1712d2a1b12ca27ed9fbf352d1d2cbcf"
+      "checksum": "ebaa7d912c575a77be9cafc12c5c9653"
     },
     "www/big_picture.drawio.svg": {
       "checksum": "49187e854c99906864724590adcbe335"
+    },
+    "www/big_picture.svg": {
+      "checksum": "f75dafbc828449f33e881a3858032880"
     },
     "www/js/input_date_handlers.js": {
       "checksum": "e587671c40ca4d05d37bd2b4ba66d314"
@@ -5009,7 +5123,10 @@
       "checksum": "23079d0aff90d31cca385d0ad611cadf"
     },
     "www/styles/energy-app.css": {
-      "checksum": "88d47db422a4479672b3315f4748e924"
+      "checksum": "d3624dfaf4d1cb5359b2b0b7fe5d47fd"
+    },
+    "www/test1.drawio.svg": {
+      "checksum": "58017c5cc5af9b5957898200a3c20d81"
     }
   },
   "users": null
