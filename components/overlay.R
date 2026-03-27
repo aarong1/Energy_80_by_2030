@@ -1,8 +1,8 @@
 
-startup_overlay_div <- function(overlay_out_time_ms = 6000, main_in_time_ms=7000){
+startup_overlay_div <- function(overlay_out_time_ms = 8000, main_in_time_ms=7000){
       tags$div(id = "startup-overlay", 
          
-               tags$script(HTML("
+              tags$head( tags$script(HTML("
                
                setTimeout(function() {
   $('#main-content').css({
@@ -25,22 +25,16 @@ startup_overlay_div <- function(overlay_out_time_ms = 6000, main_in_time_ms=7000
                
          tags$script(HTML(paste0("
     setTimeout(function() {
-      //document.getElementById('startup-overlay').style.display = 'none';
-      // document.getElementById('main-content').style.display = 'block';
-        $('#startup-overlay').fadeOut(500);
 
-        //$('#main-content').fadeIn('slow');
+        $('#startup-overlay').fadeOut(300);
 
     }, ",overlay_out_time_ms,");  // 10 seconds = 10000 ms
     //5000
     setTimeout(function() {
-      //document.getElementById('startup-overlay').style.display = 'none';
-      // document.getElementById('main-content').style.display = 'block';
-       // $('#startup-overlay').fadeOut(200);
-       
-        $('#main-content').fadeIn('slow');
+      
+
+        $('body').fadeIn('slow');
         $('#datatables_wrapper').fadeIn('slow');
-        //$('.datatable').DataTable().columns.adjust().draw();
         
                 const container = $('#datatables_wrapper');
         const originalWidth = container.width();
@@ -49,7 +43,7 @@ startup_overlay_div <- function(overlay_out_time_ms = 6000, main_in_time_ms=7000
 
     }, ",main_in_time_ms,");  // 10 seconds = 10000 ms
     //7000
-  "))),
+  ")))),
 #page_fluid(
   tags$style('
 /* Base skeleton box style for charts */
@@ -159,7 +153,8 @@ startup_overlay_div <- function(overlay_out_time_ms = 6000, main_in_time_ms=7000
   top: 0; */
   width: 100%;
   height: 100%;
-  background: black;
+  background: black; 
+   /* background: rgb(0,114,206);*/
   animation: strobe 4s ease-in-out 2s 1 forwards;
   z-index: 5;
   pointer-events: none;
@@ -250,7 +245,10 @@ grid-template-columns: repeat(7, 1fr);
 grid-template-rows: 0.2fr repeat(6, 1fr);
 grid-column-gap: 35px;
 grid-row-gap: 35px;
-background:black;
+/* background:black; */
+/* background: rgb(0,114,206); */
+background: rgba(10,10,10,0.98);
+
     position: fixed;
     top: 0%; /*110px*/
     left: 0;
@@ -279,14 +277,15 @@ div(class="div1",
     ),
 
 div(class  = "div6",
-    p(class = 'text-white fs-4 fa text-justify pt-2',"Energy Simulation Platform")#,
+    p(class = 'text-white fs-1  text-justify pt-2',"Energy Simulation Platform")#,
     
 ),
 
 div(class="div5",  
-    icon(  class = ' fs-5 px-3 pt-2 text-light', 'house-laptop') ,
-    icon(  class = ' fs-5 px-3 pt-2 text-light', 'sitemap') ,
-    icon(  class = ' fs-5 px-3 pt-2 text-light', 'comments')
+    
+    # icon(  class = ' fs-5 px-3 pt-2 text-light', 'house-laptop') ,
+    # icon(  class = ' fs-5 px-3 pt-2 text-light', 'sitemap') ,
+    # icon(  class = ' fs-5 px-3 pt-2 text-light', 'comments')
     ),
 
 
@@ -378,5 +377,5 @@ div(style="display: flex; align-items: baseline; gap: 12px ;height:70%;width:100
 )
 }
 
-page_fluid(startup_overlay_div()) |> htmltools::browsable() 
+# page_fluid(startup_overlay_div()) |> htmltools::browsable()
 

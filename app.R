@@ -1,4 +1,4 @@
-print('e')
+
 library(shiny)
 library(bslib)
 library(lubridate)
@@ -8,8 +8,6 @@ library(promises)
 library(memoise)
 library(digest)
 library(echarts4r)
-
-
 
 # Load renewable simulation sources
 options(shiny.devmode = TRUE)
@@ -35,6 +33,7 @@ getSliderValue <- function(inputValue, defaultValue) {
 source('./components/circular_value.R')
 source('./components/sticky_side_bar.R')
 source('./components/colour_scale_bar.R')
+source('./components/overlay.R')
 
 mons = unique(floor_date(seq( from = as.Date('2025-01-01'), 
                               to = as.Date(end_date),
@@ -69,8 +68,11 @@ ui <- navbarPage(
                    bootswatch = 'lumen',
                    primary = '#2196F3',
                    success = 'rgb(140,233,106)'),
+  
+  
+  
 
-  id = "main_nav",
+  id = "main_content",
   
   header = tags$head(
     # External CDN resources for renewable simulation
@@ -139,6 +141,7 @@ ui <- navbarPage(
   
   # Tab 1: Renewable Energy Simulation (from app.R)
   tabPanel("Renewable Simulation",
+           startup_overlay_div(),
     icon = icon("solar-panel"),
     value = "renewable_tab",
     

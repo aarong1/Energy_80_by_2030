@@ -4,9 +4,13 @@
 
 html {
   scroll-behavior: smooth;
-  font-size:80%  !important;
+  font-size:70%  !important;
 }
 
+html {
+  scroll-behavior: smooth;
+  font-size:70%  !important;
+}
 
 shiny-error-console {
     visibility: hidden;
